@@ -13,7 +13,7 @@ onMounted(async () => {
       style="opacity: 0.1;"
       draggable="false"
       src="/bloctopus.svg"
-      alt="Blocks"
+      alt="Repogit"
     >
 
   </div>

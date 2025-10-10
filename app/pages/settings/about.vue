@@ -3,21 +3,21 @@ import { Database } from '~/models/Database';
 
 let pressTimer: NodeJS.Timeout;
 let intervalTimer: NodeJS.Timeout;
-let blocksIcon: HTMLElement;
+let repogitIcon: HTMLElement;
 let duration = 1;
 
 onMounted(() => {
-blocksIcon = document.getElementById("blocks-icon")!;
+repogitIcon = document.getElementById("repogit-icon")!;
 
 // Desktop (mouse)
-blocksIcon.addEventListener("mousedown", startPress);
-blocksIcon.addEventListener("mouseup", cancelPress);
-blocksIcon.addEventListener("mouseleave", cancelPress);
+repogitIcon.addEventListener("mousedown", startPress);
+repogitIcon.addEventListener("mouseup", cancelPress);
+repogitIcon.addEventListener("mouseleave", cancelPress);
 
 // Mobile (toque)
-blocksIcon.addEventListener("touchstart", startPress);
-blocksIcon.addEventListener("touchend", cancelPress);
-blocksIcon.addEventListener("touchcancel", cancelPress);
+repogitIcon.addEventListener("touchstart", startPress);
+repogitIcon.addEventListener("touchend", cancelPress);
+repogitIcon.addEventListener("touchcancel", cancelPress);
 });
 
 function startPress() {
@@ -27,14 +27,14 @@ function startPress() {
     100,10, 100,10, 100,10, 100,10, 100,10, 100,10, 100,10, 100,10, 100,10, 100,10, 100,10, 100,10
   ]);
   duration = 1; // reset
-  blocksIcon.classList.add("shake");
-  blocksIcon.style.animationDuration = `${duration}s`;
+  repogitIcon.classList.add("shake");
+  repogitIcon.style.animationDuration = `${duration}s`;
 
   // diminui a duração gradualmente até no máximo 0.3s
   intervalTimer = setInterval(() => {
     if (duration >= 0.2) {
       duration -= 0.1;
-      blocksIcon.style.animationDuration = `${duration}s`;
+      repogitIcon.style.animationDuration = `${duration}s`;
     }
   }, 300);
 
@@ -46,8 +46,8 @@ function startPress() {
 
 function cancelPress() {
   navigator.vibrate([]);
-  blocksIcon.classList.remove("shake");
-  blocksIcon.style.animationDuration = `1s`; // volta ao normal
+  repogitIcon.classList.remove("shake");
+  repogitIcon.style.animationDuration = `1s`; // volta ao normal
   clearTimeout(pressTimer);
   clearInterval(intervalTimer);
 }
@@ -56,9 +56,9 @@ function cancelPress() {
 <template>
   <div class="vstack container align-items-center justify-content-between my-5">
     <div class="d-flex flex-column align-items-center user-select-none">
-      <img id="blocks-icon"
+      <img id="repogit-icon"
        src="/bloctopus.svg" style="width: 7rem;" draggable="false" alt="Bloctopus icon">
-      <h1 class="fw-semibold">Blocks</h1>
+      <h1 class="fw-semibold">Repogit</h1>
     </div>
     
     <div>

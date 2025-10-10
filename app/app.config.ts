@@ -1,6 +1,6 @@
 export default defineAppConfig({
   version: 1,
-  localStorageRepositoryKey: 'BLOCKS_REPOSITORY',
+  localStorageRepositoryKey: 'REPOGIT',
   pageFileName: 'page.md',
   databaseFileName: 'db.json',
   settingsFileName: 'settings.json',

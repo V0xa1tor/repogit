@@ -13,7 +13,7 @@ export default defineNuxtConfig({
 
   app: {
     head: {
-      title: "Blocks",
+      title: "Repogit",
       viewport: "width=device-width, height=device-height, initial-scale=1, minimum-scale=1, maximum-scale=1, user-scalable=0",
       link: [
         { rel: "icon", href: "/bloctopus.svg" },
@@ -41,8 +41,8 @@ export default defineNuxtConfig({
       '/fonts/*'
     ],
     manifest: {
-      name: 'Blocks',
-      short_name: 'Blocks',
+      name: 'Repogit',
+      short_name: 'Repogit',
       start_url: '/',
       description: 'Block and octopus',
       theme_color: '#000000',
