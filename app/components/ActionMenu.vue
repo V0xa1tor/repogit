@@ -3,6 +3,7 @@ import Sortable from "sortablejs";
 import { useActionMenuStore } from "~/stores/actionMenu";
 
 const actionMenu = useActionMenuStore();
+const breakpoint = useBreakpointStore();
 
 function toggleOffcanvas() {
   const offcanvas = document.getElementById("offcanvas")!;
@@ -17,7 +18,8 @@ function toggleOffcanvas() {
 
 <template>
   <div id="action-menu"
-    class="d-flex flex-md-column justify-content-evenly justify-content-md-start border-end flex-grow-0 p-2 gap-3 overflow-auto bg-body-tertiary"
+    class="d-flex flex-md-column justify-content-evenly justify-content-md-start flex-grow-0 p-2 gap-3 overflow-auto bg-body-tertiary"
+    :class="{ 'border-end': breakpoint.isMdUp, 'border-top': !breakpoint.isMdUp }"
   >
     <button class="btn p-1 fs-4" @click="toggleOffcanvas"><i class="bi bi-list"></i></button>
     <div v-for="item in actionMenu.items">
