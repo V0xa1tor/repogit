@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import * as bootstrap from "bootstrap";
 import Sortable from "sortablejs";
 import { useActionMenuStore } from "~/stores/actionMenu";
 
@@ -7,11 +8,16 @@ const breakpoint = useBreakpointStore();
 
 function toggleOffcanvas() {
   const offcanvas = document.getElementById("offcanvas")!;
-  if (offcanvas.style.marginLeft == "0px") {
-    offcanvas.style.marginLeft = "calc(var(--bs-offcanvas-width) * -1)";
-  } else {
+  if (!offcanvas.style.marginLeft || offcanvas.style.marginLeft == "calc(var(--bs-offcanvas-width) * -1)") {
     offcanvas.style.marginLeft = "0px";
+  } else {
+    offcanvas.style.marginLeft = "calc(var(--bs-offcanvas-width) * -1)";
   }
+  // if (breakpoint.isMdUp) {
+  // } else {
+  //   const bsOffcanvas = bootstrap.Offcanvas.getOrCreateInstance(offcanvas);
+  //   if (bsOffcanvas) bsOffcanvas.toggle();
+  // }
 }
 
 </script>

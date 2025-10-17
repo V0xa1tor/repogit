@@ -2,6 +2,9 @@
 import * as bootstrap from "bootstrap";
 
 const repositoryStore = useRepositoryStore();
+const breakpoint = useBreakpointStore();
+const actionMenuHeight = ref(0);
+const topBarHeight = ref(0);
 
 const treeData = ref<FSItem[]>([]);
 watch(() => repositoryStore.repository, async (newRepo) => {
@@ -13,54 +16,61 @@ watch(() => repositoryStore.repository, async (newRepo) => {
 }, { immediate: true });
 
 onMounted(async () => {
-new BootstrapMenu('[data-path]', {
-  fetchElementData: async (el) => {
-    const path = el.dataset.path;
-    const stat = await repositoryStore.repository?.pfs.stat(path!);
-    return { path, stat, text: el.textContent };
-  },
-  actionsGroups: [
-    ['rename', 'delete']
-  ],
-  menuEvent: 'right-click',
-  actions: {
-    createFolder: {
-      name: 'Criar pasta',
-      iconClass: 'folder',
-      isShown: async (data) => data.stat?.isDirectory(),
-      onClick: async (data) => createFolder(data.path!)
+  new BootstrapMenu('[data-path]', {
+    fetchElementData: async (el) => {
+      const path = el.dataset.path;
+      const stat = await repositoryStore.repository?.pfs.stat(path!);
+      return { path, stat, text: el.textContent };
     },
-    createFile: {
-      name: 'Criar arquivo',
-      iconClass: 'file-earmark-text',
-      isShown: async (data) => data.stat?.isDirectory(),
-      onClick: async (data) => createFile(data.path!)
-    },
-    rename: {
-      name: 'Renomear',
-      iconClass: 'type',
-      isShown: async (data) => data.path !== '/',
-      isEnabled: () => false,
-      onClick: async (data) => alert(`Renomear: ${data.path}`)
-    },
-    delete: {
-      name: 'Excluir',
-      iconClass: 'trash',
-      isShown: async (data) => data.path !== '/',
-      onClick: async (data) => {
-        if (data.path && !confirm(`Excluir "${data.path}"?`)) return;
-        await repositoryStore.removeRecursively(data.path);
+    actionsGroups: [
+      ['rename', 'delete']
+    ],
+    menuEvent: 'right-click',
+    actions: {
+      createFolder: {
+        name: 'Criar pasta',
+        iconClass: 'folder',
+        isShown: async (data) => data.stat?.isDirectory(),
+        onClick: async (data) => createFolder(data.path!)
+      },
+      createFile: {
+        name: 'Criar arquivo',
+        iconClass: 'file-earmark-text',
+        isShown: async (data) => data.stat?.isDirectory(),
+        onClick: async (data) => createFile(data.path!)
+      },
+      rename: {
+        name: 'Renomear',
+        iconClass: 'type',
+        isShown: async (data) => data.path !== '/',
+        isEnabled: () => false,
+        onClick: async (data) => alert(`Renomear: ${data.path}`)
+      },
+      delete: {
+        name: 'Excluir',
+        iconClass: 'trash',
+        isShown: async (data) => data.path !== '/',
+        onClick: async (data) => {
+          if (data.path && !confirm(`Excluir "${data.path}"?`)) return;
+          await repositoryStore.removeRecursively(data.path);
+        }
       }
     }
-  }
-});
+  });
+
+  const actionMenu = document.getElementById("action-menu")!;
+  const actionMenuObserver = new ResizeObserver(() => {
+    actionMenuHeight.value = actionMenu.offsetHeight;
+  });
+  actionMenuObserver.observe(actionMenu);
+
+  const topBar = document.getElementById("top-bar")!;
+  const topBarObserver = new ResizeObserver(() => {
+    topBarHeight.value = topBar.offsetHeight;
+  });
+  topBarObserver.observe(actionMenu);
 
 });
-
-function hideOffcanvas() {
-  const bsOffcanvas = bootstrap.Offcanvas.getInstance("#offcanvas");
-  if (bsOffcanvas) bsOffcanvas.hide();
-}
 
 async function createFile(path: string) {
   await repositoryStore.repository?.pfs.writeFile(`${path}/Arquivo.txt`, "", "utf8");
@@ -75,7 +85,12 @@ async function createFolder(path: string) {
 </script>
 
 <template>
-  <div data-bs-backdrop="false" class="offcanvas offcanvas-start show" tabindex="-1" id="offcanvas">
+  <div id="offcanvas"
+    class="offcanvas show offcanvas-start border-end"
+    :class="{'position-relative': breakpoint.isMdUp, 'h-100': breakpoint.isMdUp}"
+    :style="`top: ${breakpoint.isMdUp ? 0 : topBarHeight}px; bottom: ${breakpoint.isMdUp ? 0 : actionMenuHeight}px;`"
+    tabindex="-1"
+  >
     <div class="offcanvas-header">
       <h5 class="offcanvas-title" id="offcanvasLabel">Blocos</h5>
       <!-- <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button> -->
@@ -108,15 +123,8 @@ i, i::before {
 }
 
 .offcanvas {
-  --bs-offcanvas-width: 300px;
-  --bs-offcanvas-transition: margin 0.3s ease-in-out;
-}
-
-#offcanvas {
-  position: relative;
-  left: inherit;
-  height: 100%;
   margin-left: calc(var(--bs-offcanvas-width) * -1);
+  --bs-offcanvas-transition: margin 0.3s ease-in-out;
 }
 
 .sortable-ghost {

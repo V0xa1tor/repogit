@@ -37,7 +37,7 @@ function toggleView() {
 </script>
 
 <template>
-  <nav class="hstack flex-nowrap align-items-stretch">
+  <nav class="hstack flex-nowrap bg-body-tertiary align-items-stretch border-bottom" id="top-bar">
     <div class="p-2 text-nowrap">
       <button class="btn p-1 fs-4" @click="$router.back()"><i class="bi bi-arrow-left"></i></button>
       <button class="btn p-1 fs-4" @click="$router.forward()"><i class="bi bi-arrow-right"></i></button>
@@ -58,5 +58,8 @@ function toggleView() {
 <style scoped>
 i, i::before {
   display: block;
+}
+#top-bar {
+  z-index: calc(1045 + 1);
 }
 </style>
