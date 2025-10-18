@@ -2,6 +2,7 @@ import { defineStore } from "pinia";
 import { ref } from "vue";
 import LightningFS from "@isomorphic-git/lightning-fs";
 import * as git from "isomorphic-git";
+import { v4 as uuidv4 } from 'uuid';
 import JSZip from "jszip";
 
 export interface FsInstance {
@@ -67,7 +68,7 @@ export const useRepositoryStore = defineStore("repository", () => {
   }
 
   async function createPage(path: string, name: string) {
-    const dirPath = `${path}/${name}`;
+    const dirPath = `${path}/${name + appConfig.uuidSeparator + uuidv4()}`;
     await repository.value?.pfs.mkdir(dirPath);
     await repository.value?.pfs.writeFile(`${dirPath}/${appConfig.pageFileName}`, '', 'utf8');
   }
