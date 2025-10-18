@@ -54,7 +54,7 @@ function cancelPress() {
 </script>
 
 <template>
-  <div class="vstack container align-items-center justify-content-between my-5">
+  <div class="vstack container align-items-center justify-content-between mt-5 mb-3">
     <div class="d-flex flex-column align-items-center user-select-none">
       <img id="repogit-icon"
        src="/bloctopus.svg" style="width: 7rem;" draggable="false" alt="Bloctopus icon">
@@ -66,7 +66,7 @@ function cancelPress() {
     </div>
     
     <div class="text-secondary">
-      <p>Version {{ useAppConfig().version }}</p>
+      <p class="m-0">Version {{ useAppConfig().version }}</p>
     </div>
   </div>
 </template>

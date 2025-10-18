@@ -20,7 +20,7 @@ function setCSSVariable(variable: string, value: string) {
 </script>
 
 <template>
-  <div class="container my-3">
+  <div class="container vstack py-3 gap-3">
 
   <h1 class="mb-3">Customize</h1>
 

@@ -9,9 +9,9 @@ const pages = [
 </script>
 
 <template>
-  <div class="container vstack gap-3 my-3">
+  <div class="container vstack gap-3 py-3">
 
-    <h1>Configurações</h1>
+    <h1 class="mb-3">Configurações</h1>
     
     <div class="list-group">
       <button v-for="page in pages" type="button"

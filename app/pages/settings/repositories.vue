@@ -60,7 +60,7 @@ function deleteRepository(name: string) {
 </script>
 
 <template>
-  <div class="container vstack gap-3">
+  <div class="container vstack py-3 gap-3">
 
     <h1 class="mb-3">Repositórios</h1>
 

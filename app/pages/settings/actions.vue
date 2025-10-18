@@ -14,7 +14,7 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="container my-3">
+  <div class="container vstack gap-3 py-3">
 
     <h1 class="mb-3">Configurações</h1>
 
