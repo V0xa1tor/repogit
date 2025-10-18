@@ -62,7 +62,7 @@ function cancelPress() {
     </div>
     
     <div>
-      <a class="btn btn-outline-primary hstack gap-2 justify-content-center" href="https://github.com/V0xa1tor/Bloctopus"><i class="bi bi-github"></i>Source code</a>
+      <a class="btn btn-outline-primary hstack gap-2 justify-content-center" href="https://github.com/V0xa1tor/repogit"><i class="bi bi-github"></i>Source code</a>
     </div>
     
     <div class="text-secondary">
