@@ -62,4 +62,8 @@ i, i::before {
 #top-bar {
   z-index: calc(1045 + 1);
 }
+
+.breadcrumb-item::before {
+  float: none;
+}
 </style>
