@@ -6,12 +6,16 @@ const breakpoint = useBreakpointStore();
 const actionMenuHeight = ref(0);
 const topBarHeight = ref(0);
 
-const treeData = ref<FSItem[]>([]);
+const treeData = ref<FSItem>({
+  name: "root",
+  path: "/",
+  type: "dir"
+});
 watch(() => repositoryStore.repository, async (newRepo) => {
   if (newRepo) {
-    treeData.value = await repositoryStore.listAllFilesAndDirs();
+    treeData.value!.children = await repositoryStore.listAllFilesAndDirs();
   } else {
-    treeData.value = [];
+    treeData.value!.children = [];
   }
 }, { immediate: true });
 
@@ -19,8 +23,9 @@ onMounted(async () => {
   new BootstrapMenu('[data-path]', {
     fetchElementData: async (el) => {
       const path = el.dataset.path;
+      const input = el.querySelector("input")!;
       const stat = await repositoryStore.repository?.pfs.stat(path!);
-      return { path, stat, text: el.textContent };
+      return { path, stat, input, text: el.textContent };
     },
     actionsGroups: [
       ['rename', 'delete']
@@ -43,8 +48,7 @@ onMounted(async () => {
         name: 'Renomear',
         iconClass: 'type',
         isShown: async (data) => data.path !== '/',
-        isEnabled: () => false,
-        onClick: async (data) => alert(`Renomear: ${data.path}`)
+        onClick: async (data) => renameFocus(data.input)
       },
       delete: {
         name: 'Excluir',
@@ -57,6 +61,11 @@ onMounted(async () => {
       }
     }
   });
+
+  function renameFocus(input: HTMLInputElement) {
+    input.disabled = false;
+    input.focus();
+  }
 
   const actionMenu = document.getElementById("action-menu")!;
   const actionMenuObserver = new ResizeObserver(() => {
@@ -73,13 +82,18 @@ onMounted(async () => {
 });
 
 async function createFile(path: string) {
-  await repositoryStore.repository?.pfs.writeFile(`${path}/Arquivo.txt`, "", "utf8");
+  // await repositoryStore.repository?.pfs.writeFile(`${path}/Arquivo.txt`, "", "utf8");
+  await repositoryStore.createPage(path, 'teste');
   await repositoryStore.loadRepositories();
 }
 
 async function createFolder(path: string) {
   await repositoryStore.repository?.pfs.mkdir(`${path}/Nova pasta`);
   await repositoryStore.loadRepositories();
+}
+
+async function rename(path: string) {
+
 }
 
 </script>
@@ -93,7 +107,7 @@ async function createFolder(path: string) {
   >
     <div data-path="/" class="offcanvas-body vstack gap-3">
       <div id="offcanvas-blocks" class="vstack gap-1">
-        <FileTree :items="treeData" />
+        <FileTree :item="treeData" />
       </div>
     </div>
   </div>

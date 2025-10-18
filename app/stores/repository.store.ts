@@ -66,6 +66,12 @@ export const useRepositoryStore = defineStore("repository", () => {
     await loadRepositories();
   }
 
+  async function createPage(path: string, name: string) {
+    const dirPath = `${path}/${name}`;
+    await repository.value?.pfs.mkdir(dirPath);
+    await repository.value?.pfs.writeFile(`${dirPath}/${appConfig.pageFileName}`, '', 'utf8');
+  }
+
   /** Exporta o FS inteiro como um Blob ZIP */
   async function exportRepositoryZip(name: string): Promise<Blob | null> {
     const instance = repositories.value.find(f => f.name === name);
@@ -131,6 +137,16 @@ export const useRepositoryStore = defineStore("repository", () => {
       await importRepositoryZip(newName, zip);
     }
     await loadRepositories();
+  }
+
+  async function exists(path: string) {
+    try {
+      await repository.value?.pfs.stat(path);
+      return true; // existe
+    } catch (err) {
+      if (err instanceof Error && (err as any).code === "ENOENT") return false; // não existe
+      throw err; // outro erro inesperado
+    }
   }
 
   /**
@@ -221,6 +237,8 @@ export const useRepositoryStore = defineStore("repository", () => {
     exportRepositoryZip,
     importRepositoryZip,
     listAllFilesAndDirs,
+    createPage,
+    exists,
     getFile,
     removeRecursively
   };

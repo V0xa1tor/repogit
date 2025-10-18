@@ -2,11 +2,11 @@
 import Sortable from 'sortablejs';
 
 // Busca recursiva do item pela name e type
-function findItemByName(items: FSItem[], name: string): FSItem | undefined {
-  for (const item of items) {
-    if (item.name === name && item.type === 'dir') return item;
-    if (item.children) {
-      const found = findItemByName(item.children, name);
+function findItemByName(item: FSItem, name: string): FSItem | undefined {
+  for (const child of item.children!) {
+    if (child.name === name && child.type === 'dir') return child;
+    if (child.children) {
+      const found = findItemByName(child, name);
       if (found) return found;
     }
   }
@@ -15,8 +15,10 @@ function findItemByName(items: FSItem[], name: string): FSItem | undefined {
 // Flag para ignorar clique após drag
 let ignoreClick = false;
 
-const props = defineProps<{ items: FSItem[] }>();
+const repositoryStore = useRepositoryStore();
+const props = defineProps<{ item: FSItem }>();
 const emit = defineEmits(['toggle-folder']);
+const folderName = ref<HTMLInputElement>();
 
 function toggleFolder(item: FSItem) {
   // Garante reatividade usando Vue.set se necessário
@@ -49,7 +51,7 @@ function setupSortable(id: string) {
             // Encontra o item correspondente
             const itemName = item.querySelector('.fw-bold')?.textContent;
             if (itemName) {
-              const item = findItemByName(props.items, itemName!);
+              const item = findItemByName(props.item, itemName!);
               if (item && item.collapsed === false) item.collapsed = true;
             }
           },
@@ -80,32 +82,80 @@ onMounted(() => {
 onUpdated(() => {
   applySortables();
 });
+
+async function renameFolder(item: FSItem, input: HTMLInputElement) {
+
+  const path = item.path.split('/');
+  path.pop();
+
+  const newName = input.value.trim();
+
+  if (!newName) {
+    input.value = item.name;
+    input.disabled = true;
+    return;
+  }
+
+  path.push(newName);
+  const newPath = path.join('/');
+  
+  if (item.path === newPath) {
+    input.value = item.name;
+    input.disabled = true;
+    return;
+  }
+
+  if (await repositoryStore.exists(newPath)) {
+    alert(`O arquivo "${newName}" já existe.`);
+    input.value = item.name;
+    input.disabled = true;
+    return;
+  }
+
+  try {
+    await repositoryStore.repository?.pfs.rename(item.path, newPath);
+    window.history.replaceState({}, '', newPath);
+    await repositoryStore.loadRepositories();
+  } catch(e) {
+    alert(`Não foi possível renomear o arquivo "${item.path}" para "${newPath}". Verifique o console.`);
+    console.error(e);
+    input.value = item.name;
+  }
+
+  input.disabled = true;
+}
 </script>
 
 <template>
   <ul class="list-unstyled gap-1 d-flex flex-column user-select-none m-0">
-    <template v-for="item in items" :key="item.id">
+    <template v-for="child in item.children" :key="child.id">
       <li
         class="tree-item rounded gap-1 d-flex flex-column"
-        :data-path="item.path"
+        :data-path="child.path"
       >
         <div
-          class="file hstack gap-2 align-items-center rounded-2 py-1 px-2"
+          class="file hstack align-items-center rounded-2 py-1 px-2"
           @click="!ignoreClick
-          ? (item.type === 'dir' ? toggleFolder(item) : navigateTo(item.path))
+          ? (child.type === 'dir' ? toggleFolder(child) : navigateTo(child.path))
           : null"
         >
-          <template v-if="item.type === 'dir'">
-            <i class="text-body-tertiary" :class="item.collapsed ? 'bi bi-chevron-right' : 'bi bi-chevron-down'" style="font-size:1.2em"></i>
-            <span class="flex-grow-1 text-truncate">{{ item.name }}</span>
+          <template v-if="child.type === 'dir'">
+            <i class="text-body-tertiary" :class="child.collapsed ? 'bi bi-chevron-right' : 'bi bi-chevron-down'" style="font-size:1.2em"></i>
+            <input disabled
+              ref="folderName"
+              @keydown="(e) => { if (e.key === 'Enter') (e.target as HTMLInputElement).blur(); }"
+              @focusout="async (e) => await renameFolder(child, e.target as HTMLInputElement)"
+              class="flex-grow-1 text-truncate form-control p-0 px-2 border-0 bg-transparent"
+              :value="child.name"
+            />
           </template>
           <template v-else>
             <i class="bi bi-file-earmark-text" style="font-size:1.2em"></i>
-            <span class="flex-grow-1 text-truncate">{{ item.name }}</span>
+            <span class="flex-grow-1 text-truncate">{{ child.name }}</span>
           </template>
         </div>
-        <ul v-if="item.type === 'dir' && !item.collapsed && item.children && item.children.length > 0" class="list-unstyled ms-3">
-          <FileTree :items="item.children" @toggle-folder="toggleFolder" />
+        <ul v-if="child.type === 'dir' && !child.collapsed && child.children && child.children.length > 0" class="list-unstyled ms-3">
+          <FileTree :item="child" @toggle-folder="toggleFolder" />
         </ul>
       </li>
     </template>
