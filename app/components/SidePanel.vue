@@ -35,18 +35,33 @@ onMounted(async () => {
       createFolder: {
         name: 'Criar pasta',
         iconClass: 'folder',
-        isShown: async (data) => data.stat?.isDirectory(),
+        // isShown: async (data) => data.stat?.isDirectory(),
+        isShown: () => false,
         onClick: async (data) => createFolder(data.path!)
       },
       createFile: {
-        name: 'Criar arquivo',
-        iconClass: 'file-earmark-text',
+        name: 'Criar página',
+        iconClass: 'file-earmark',
         isShown: async (data) => data.stat?.isDirectory(),
         onClick: async (data) => createFile(data.path!)
       },
+      createDatabase: {
+        name: 'Criar banco de dados',
+        iconClass: 'database',
+        isShown: async (data) => data.stat?.isDirectory(),
+        isEnabled: () => false,
+        onClick: () => {}
+      },
+      createLink: {
+        name: 'Criar link',
+        iconClass: 'link-45deg',
+        isShown: async (data) => data.stat?.isDirectory(),
+        isEnabled: () => false,
+        onClick: () => {}
+      },
       rename: {
         name: 'Renomear',
-        iconClass: 'type',
+        iconClass: 'pencil',
         isShown: async (data) => data.path !== '/',
         onClick: async (data) => renameFocus(data.input)
       },
