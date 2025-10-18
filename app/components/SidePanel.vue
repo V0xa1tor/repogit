@@ -91,28 +91,10 @@ async function createFolder(path: string) {
     :style="`top: ${breakpoint.isMdUp ? 0 : topBarHeight}px; bottom: ${breakpoint.isMdUp ? 0 : actionMenuHeight}px;`"
     tabindex="-1"
   >
-    <div class="offcanvas-header">
-      <h5 class="offcanvas-title" id="offcanvasLabel">Blocos</h5>
-      <!-- <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button> -->
-    </div>
     <div data-path="/" class="offcanvas-body vstack gap-3">
       <div id="offcanvas-blocks" class="vstack gap-1">
         <FileTree :items="treeData" />
       </div>
-    </div>
-    <div class="p-3 hstack gap-2">
-      <button
-        class="btn btn-outline-primary hstack gap-2 p-1 w-100 justify-content-center"
-        @click="createFolder('/')"
-      >
-        <i class="bi bi-folder"></i>Nova pasta
-      </button>
-      <button
-        class="btn btn-outline-primary hstack gap-2 p-1 w-100 justify-content-center"
-        @click="createFile('/')"
-      >
-        <i class="bi bi-file-earmark-text"></i>Novo arquivo
-      </button>
     </div>
   </div>
 </template>
