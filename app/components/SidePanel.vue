@@ -78,6 +78,7 @@ onMounted(async () => {
   });
 
   function renameFocus(input: HTMLInputElement) {
+    input.oncontextmenu = (e) => e.stopPropagation();
     input.disabled = false;
     input.focus();
   }
@@ -105,10 +106,6 @@ async function createFile(path: string) {
 async function createFolder(path: string) {
   await repositoryStore.repository?.pfs.mkdir(`${path}/Nova pasta`);
   await repositoryStore.loadRepositories();
-}
-
-async function rename(path: string) {
-
 }
 
 </script>

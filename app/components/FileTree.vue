@@ -83,6 +83,14 @@ onUpdated(() => {
   applySortables();
 });
 
+function renameFocus(input: HTMLInputElement) {
+  if (!input) return;
+  input.oncontextmenu = (e) => e.stopPropagation();
+  input.disabled = false;
+  input.focus();
+  input.select();
+}
+
 async function renameFolder(item: FSItem, input: HTMLInputElement) {
 
   const path = item.path.split('/');
@@ -91,6 +99,7 @@ async function renameFolder(item: FSItem, input: HTMLInputElement) {
   const newName = input.value.trim();
 
   if (!newName) {
+    input.oncontextmenu = null;
     input.value = item.name;
     input.disabled = true;
     return;
@@ -100,6 +109,7 @@ async function renameFolder(item: FSItem, input: HTMLInputElement) {
   const newPath = path.join('/');
   
   if (item.path === newPath) {
+    input.oncontextmenu = null;
     input.value = item.name;
     input.disabled = true;
     return;
@@ -107,6 +117,7 @@ async function renameFolder(item: FSItem, input: HTMLInputElement) {
 
   if (await repositoryStore.exists(newPath)) {
     alert(`O arquivo "${newName}" já existe.`);
+    input.oncontextmenu = null;
     input.value = item.name;
     input.disabled = true;
     return;
@@ -121,7 +132,7 @@ async function renameFolder(item: FSItem, input: HTMLInputElement) {
     console.error(e);
     input.value = item.name;
   }
-
+  input.oncontextmenu = null;
   input.disabled = true;
 }
 </script>
@@ -132,6 +143,7 @@ async function renameFolder(item: FSItem, input: HTMLInputElement) {
       <li
         class="tree-item rounded gap-1 d-flex flex-column"
         :data-path="child.path"
+        @dblclick="(e) => { renameFocus((e.target as HTMLLIElement).querySelector('input') as HTMLInputElement) }"
       >
         <div
           class="file hstack align-items-center rounded-2 py-1 px-2"
@@ -143,6 +155,7 @@ async function renameFolder(item: FSItem, input: HTMLInputElement) {
             <i class="text-body-tertiary" :class="child.collapsed ? 'bi bi-chevron-right' : 'bi bi-chevron-down'" style="font-size:1.2em"></i>
             <input disabled
               ref="folderName"
+              @click="(e) => e.stopPropagation()"
               @keydown="(e) => { if (e.key === 'Enter') (e.target as HTMLInputElement).blur(); }"
               @focusout="async (e) => await renameFolder(child, e.target as HTMLInputElement)"
               class="flex-grow-1 text-truncate form-control p-0 px-2 border-0 bg-transparent"
@@ -169,6 +182,10 @@ async function renameFolder(item: FSItem, input: HTMLInputElement) {
 }
 .file:hover {
   background-color: var(--bs-tertiary-bg) !important;
+}
+
+.tree-item input[disabled] {
+  pointer-events: none;
 }
 
 i, i::before {
