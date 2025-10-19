@@ -42,20 +42,13 @@ onMounted(async () => {
       },
       createFile: {
         name: 'Criar página',
-        iconClass: 'file-earmark',
+        iconClass: 'file-earmark-text',
         isShown: async (data) => data.stat?.isDirectory(),
         onClick: async (data) => createFile(data.path!)
       },
       createDatabase: {
         name: 'Criar banco de dados',
         iconClass: 'database',
-        isShown: async (data) => data.stat?.isDirectory(),
-        isEnabled: () => false,
-        onClick: () => {}
-      },
-      createLink: {
-        name: 'Criar link',
-        iconClass: 'link-45deg',
         isShown: async (data) => data.stat?.isDirectory(),
         isEnabled: () => false,
         onClick: () => {}
