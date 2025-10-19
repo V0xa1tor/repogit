@@ -20,7 +20,6 @@ const repositoryStore = useRepositoryStore();
 const repoStore = useRepoStore();
 const props = defineProps<{ item: FSItem }>();
 const emit = defineEmits(['toggle-folder']);
-const folderName = ref<HTMLInputElement>();
 
 function toggleFolder(item: FSItem) {
   // Garante reatividade usando Vue.set se necessário
@@ -88,7 +87,7 @@ onUpdated(() => {
 function renameFocus(input: HTMLInputElement) {
   if (!input) return;
   input.oncontextmenu = (e) => e.stopPropagation();
-  input.disabled = false;
+  input.readOnly = false;
   input.focus();
   input.select();
 }
@@ -103,7 +102,7 @@ async function renameFolder(item: FSItem, input: HTMLInputElement) {
   if (!newName) {
     input.oncontextmenu = null;
     input.value = item.name;
-    input.disabled = true;
+    input.readOnly = true;
     return;
   }
 
@@ -113,7 +112,7 @@ async function renameFolder(item: FSItem, input: HTMLInputElement) {
   if (item.path === newPath) {
     input.oncontextmenu = null;
     input.value = item.name;
-    input.disabled = true;
+    input.readOnly = true;
     return;
   }
 
@@ -121,7 +120,7 @@ async function renameFolder(item: FSItem, input: HTMLInputElement) {
     alert(`O arquivo "${newName}" já existe.`);
     input.oncontextmenu = null;
     input.value = item.name;
-    input.disabled = true;
+    input.readOnly = true;
     return;
   }
 
@@ -135,7 +134,7 @@ async function renameFolder(item: FSItem, input: HTMLInputElement) {
     input.value = item.name;
   }
   input.oncontextmenu = null;
-  input.disabled = true;
+  input.readOnly = true;
 }
 </script>
 
@@ -145,24 +144,29 @@ async function renameFolder(item: FSItem, input: HTMLInputElement) {
       <li
         class="tree-item rounded gap-1 d-flex flex-column"
         :data-path="child.path"
-        @dblclick="(e) => { renameFocus((e.target as HTMLLIElement).querySelector('input') as HTMLInputElement) }"
       >
         <div
           class="file hstack align-items-center rounded-2 py-1 px-2"
-          @click="!ignoreClick
-          ? (child.type === 'dir' ? toggleFolder(child) : navigateTo(child.path))
-          : null"
         >
           <template v-if="child.type === 'dir'">
-            <i class="text-body-tertiary" :class="child.collapsed ? 'bi bi-chevron-right' : 'bi bi-chevron-down'" style="font-size:1.2em"></i>
-            <input disabled
-              ref="folderName"
-              @click="(e) => e.stopPropagation()"
-              @keydown="(e) => { if (e.key === 'Enter') (e.target as HTMLInputElement).blur(); }"
-              @focusout="async (e) => await renameFolder(child, e.target as HTMLInputElement)"
-              class="flex-grow-1 text-truncate form-control p-0 px-2 border-0 bg-transparent"
-              :value="child.name"
-            />
+            <i
+              class="text-body-tertiary"
+              :class="child.collapsed ? 'bi bi-chevron-right' : 'bi bi-chevron-down'"
+              style="font-size:1.2em"
+              @click="!ignoreClick ? toggleFolder(child) : null"
+            ></i>
+            <div
+              class="input-wrapper w-100"
+              @click="navigateTo(child.path)"
+              @dblclick="(e) => renameFocus((e.target as HTMLLIElement).querySelector('input') as HTMLInputElement)"
+            >
+              <input readonly
+                @keydown="(e) => { if (e.key === 'Enter') (e.target as HTMLInputElement).blur(); }"
+                @focusout="async (e) => await renameFolder(child, e.target as HTMLInputElement)"
+                class="flex-grow-1 text-truncate form-control p-0 px-2 border-0 bg-transparent"
+                :value="child.name"
+              />
+            </div>
           </template>
           <template v-else>
             <i
@@ -179,15 +183,20 @@ async function renameFolder(item: FSItem, input: HTMLInputElement) {
                   && appConfig.propertiesFileName
               }"
               style="font-size:1.2em"
+              @click="!ignoreClick ? toggleFolder(child) : null"
             ></i>
-            <input disabled
-              ref="folderName"
-              @click="(e) => e.stopPropagation()"
-              @keydown="(e) => { if (e.key === 'Enter') (e.target as HTMLInputElement).blur(); }"
-              @focusout="async (e) => await renameFolder(child, e.target as HTMLInputElement)"
-              class="flex-grow-1 text-truncate form-control p-0 px-2 border-0 bg-transparent"
-              :value="child.name"
-            />
+            <div
+              class="input-wrapper w-100"
+              @click="navigateTo(child.path)"
+              @dblclick="(e) => renameFocus((e.target as HTMLLIElement).querySelector('input') as HTMLInputElement)"
+            >
+              <input readonly
+                @keydown="(e) => { if (e.key === 'Enter') (e.target as HTMLInputElement).blur(); }"
+                @focusout="async (e) => await renameFolder(child, e.target as HTMLInputElement)"
+                class="flex-grow-1 text-truncate form-control p-0 px-2 border-0 bg-transparent"
+                :value="child.name"
+              />
+            </div>
           </template>
         </div>
         <ul v-if="child.type === 'dir' && !child.collapsed && child.children && child.children.length > 0" class="list-unstyled ms-3">
@@ -207,7 +216,7 @@ async function renameFolder(item: FSItem, input: HTMLInputElement) {
   background-color: var(--bs-tertiary-bg) !important;
 }
 
-.tree-item input[disabled] {
+.tree-item input[readonly] {
   pointer-events: none;
 }
 

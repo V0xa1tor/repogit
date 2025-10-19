@@ -73,7 +73,7 @@ onMounted(async () => {
 
   function renameFocus(input: HTMLInputElement) {
     input.oncontextmenu = (e) => e.stopPropagation();
-    input.disabled = false;
+    input.readOnly = false;
     input.focus();
   }
 
