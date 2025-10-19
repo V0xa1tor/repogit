@@ -68,9 +68,19 @@ export const useRepositoryStore = defineStore("repository", () => {
   }
 
   async function createPage(path: string, name: string) {
-    const dirPath = `${path}/${name + appConfig.uuidSeparator + uuidv4()}`;
+    let dirPath = `${path}/${name}`;
+    let num = 0;
+    while (await exists(`${dirPath}${num ? ' ' + num : ''}`)) ++num;
+    if (num) dirPath += " " + num;
     await repository.value?.pfs.mkdir(dirPath);
     await repository.value?.pfs.writeFile(`${dirPath}/${appConfig.pageFileName}`, '', 'utf8');
+
+    const properties = {
+      id: uuidv4(),
+      order: 1,
+      collapsed: true
+    };
+    await repository.value?.pfs.writeFile(`${dirPath}/${appConfig.propertiesFileName}`, JSON.stringify(properties, null, '\t'), 'utf8');
   }
 
   /** Exporta o FS inteiro como um Blob ZIP */

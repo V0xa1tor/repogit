@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import Sortable from 'sortablejs';
+import appConfig from '~/app.config';
 
 // Busca recursiva do item pela name e type
 function findItemByName(item: FSItem, name: string): FSItem | undefined {
@@ -163,8 +164,29 @@ async function renameFolder(item: FSItem, input: HTMLInputElement) {
             />
           </template>
           <template v-else>
-            <i class="bi bi-file-earmark-text" style="font-size:1.2em"></i>
-            <span class="flex-grow-1 text-truncate">{{ child.name }}</span>
+            <i
+              class="bi"
+              :class="{
+                'bi-file-earmark-text': child.name == appConfig.pageFileName,
+                'bi-database': child.name == appConfig.databaseFileName,
+                'bi-gear': child.name == appConfig.settingsFileName,
+                'bi-puzzle': child.name == appConfig.propertiesFileName,
+                'bi-file-earmark': child.name
+                  != appConfig.pageFileName
+                  && appConfig.databaseFileName
+                  && appConfig.settingsFileName
+                  && appConfig.propertiesFileName
+              }"
+              style="font-size:1.2em"
+            ></i>
+            <input disabled
+              ref="folderName"
+              @click="(e) => e.stopPropagation()"
+              @keydown="(e) => { if (e.key === 'Enter') (e.target as HTMLInputElement).blur(); }"
+              @focusout="async (e) => await renameFolder(child, e.target as HTMLInputElement)"
+              class="flex-grow-1 text-truncate form-control p-0 px-2 border-0 bg-transparent"
+              :value="child.name"
+            />
           </template>
         </div>
         <ul v-if="child.type === 'dir' && !child.collapsed && child.children && child.children.length > 0" class="list-unstyled ms-3">

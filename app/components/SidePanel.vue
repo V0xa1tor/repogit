@@ -99,7 +99,7 @@ onMounted(async () => {
 
 async function createFile(path: string) {
   // await repositoryStore.repository?.pfs.writeFile(`${path}/Arquivo.txt`, "", "utf8");
-  await repositoryStore.createPage(path, 'teste');
+  await repositoryStore.createPage(path, 'Sem título');
   await repositoryStore.loadRepositories();
 }
 
