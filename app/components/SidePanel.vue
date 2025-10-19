@@ -118,8 +118,18 @@ async function createFolder(path: string) {
     tabindex="-1"
   >
     <div data-path="/" class="offcanvas-body vstack gap-3">
-      <div id="offcanvas-blocks" class="vstack gap-1">
+      <div v-if="treeData.children?.length" id="offcanvas-blocks" class="vstack gap-1">
         <FileTree :item="treeData" />
+      </div>
+      <div v-else>
+        <div class="text-center fs-5 text-body-tertiary">
+          <div v-if="repositoryStore.repository">
+            O repositório "{{ repositoryStore.repository?.name }}" está vazio.
+          </div>
+          <div v-else>
+            Nenhum repositório selecionado.
+          </div>
+        </div>
       </div>
     </div>
   </div>
