@@ -34,7 +34,6 @@ async function renameFile() {
   <input ref="editorTitle"
     class="form-control shadow-none p-3 pb-0 border-0 rounded-0 fs-1"
     style="resize: none; field-sizing: content;"
-    @contextmenu="(e) => e.stopPropagation()"
     @focusout="renameFile"
     :value="file.name"
     placeholder="Título..."

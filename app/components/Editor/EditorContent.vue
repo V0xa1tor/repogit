@@ -14,7 +14,6 @@ function updateContent() {
   <textarea ref="editorContent"
     class="form-control shadow-none p-3 pb-5 border-0 rounded-0 flex-grow-1 user-select-none"
     style="resize: none; field-sizing: content; overflow-y: none;"
-    @contextmenu="(e) => e.stopPropagation()"
     @input="updateContent"
     :value="file.content"
     placeholder="Escreva algo..."

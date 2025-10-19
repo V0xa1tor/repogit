@@ -106,6 +106,7 @@ async function createFolder(path: string) {
 
 <template>
   <div id="offcanvas"
+    @contextmenu="(e) => e.preventDefault()"
     class="offcanvas show offcanvas-start border-end"
     :class="{'position-relative': breakpoint.isMdUp, 'h-100': breakpoint.isMdUp}"
     :style="`top: ${breakpoint.isMdUp ? 0 : topBarHeight}px; bottom: ${breakpoint.isMdUp ? 0 : actionMenuHeight}px;`"
