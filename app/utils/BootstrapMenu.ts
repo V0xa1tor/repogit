@@ -27,7 +27,7 @@ const defaultOptions: BootstrapMenuOptions = {
     menuEvent: 'right-click',
     actionsGroups: [],
     actions: {},
-    noActionsMessage: 'No available actions',
+    noActionsMessage: 'Sem ações disponíveis',
     _actionSelectEvent: 'click',
 };
 
@@ -84,6 +84,8 @@ function renderMenu(menu: BootstrapMenu): HTMLElement {
     noActionsLi.className = 'noActionsMessage disabled';
     const noActionsButton = document.createElement('button');
     noActionsButton.setAttribute('role', 'menuitem');
+    noActionsButton.classList.add('dropdown-item');
+    noActionsButton.disabled = true;
     const noActionsSpan = document.createElement('span');
     noActionsSpan.textContent = menu.options.noActionsMessage || 'No available actions';
     noActionsButton.appendChild(noActionsSpan);
