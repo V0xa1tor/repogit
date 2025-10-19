@@ -1,13 +1,14 @@
 <script setup lang="ts">
 const path = decodeURIComponent(useRouter().currentRoute.value.path);
 const repositoryStore = useRepositoryStore();
+const repoStore = useRepoStore();
 const file = ref<FSFile | null>(null);
 
 watch(
-  () => repositoryStore.repository,
+  () => repoStore.repo,
   async (repo) => {
     if (repo) {
-      file.value = await repositoryStore.getFile(path);
+      file.value = await repoStore.getFile(path);
     }
   },
   { immediate: true }

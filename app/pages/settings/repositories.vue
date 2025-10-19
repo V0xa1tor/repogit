@@ -4,6 +4,7 @@ import * as bootstrap from "bootstrap";
 import { useRepositoryStore } from '~/stores/repository.store';
 
 const repositoryStore = useRepositoryStore();
+const repoStore = useRepoStore();
 
 const newRepositoryName = ref('');
 const isNewRepositoryNameValid = computed(() => newRepositoryName.value.trim().length > 0 && !repositoryStore.repositories?.some(repo => repo.name.trim() === newRepositoryName.value.trim()));
@@ -85,8 +86,8 @@ function deleteRepository(name: string) {
               name="repository"
               :id="repo.name"
               autocomplete="off"
-              @change="repositoryStore.setRepository(repo.name)"
-              :checked="repositoryStore.repository?.name === repo.name"
+              @change="repoStore.setRepository(repo.name)"
+              :checked="repoStore.repo?.name === repo.name"
             />
 
             <div class="me-auto">

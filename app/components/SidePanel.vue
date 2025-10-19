@@ -2,6 +2,7 @@
 import * as bootstrap from "bootstrap";
 
 const repositoryStore = useRepositoryStore();
+const repoStore = useRepoStore();
 const breakpoint = useBreakpointStore();
 const actionMenuHeight = ref(0);
 const topBarHeight = ref(0);
@@ -11,9 +12,9 @@ const treeData = ref<FSItem>({
   path: "/",
   type: "dir"
 });
-watch(() => repositoryStore.repository, async (newRepo) => {
+watch(() => repoStore.repo, async (newRepo) => {
   if (newRepo) {
-    treeData.value!.children = await repositoryStore.listAllFilesAndDirs();
+    treeData.value!.children = await repoStore.listAllFilesAndDirs();
   } else {
     treeData.value!.children = [];
   }
@@ -24,7 +25,7 @@ onMounted(async () => {
     fetchElementData: async (el) => {
       const path = el.dataset.path;
       const input = el.querySelector("input")!;
-      const stat = await repositoryStore.repository?.pfs.stat(path!);
+      const stat = await repoStore.repo?.pfs.stat(path!);
       return { path, stat, input, text: el.textContent };
     },
     actionsGroups: [
@@ -71,7 +72,7 @@ onMounted(async () => {
         isShown: async (data) => data.path !== '/',
         onClick: async (data) => {
           if (data.path && !confirm(`Excluir "${data.path}"?`)) return;
-          await repositoryStore.removeRecursively(data.path);
+          await repoStore.removeRecursively(data.path);
         }
       }
     }
@@ -99,12 +100,12 @@ onMounted(async () => {
 
 async function createFile(path: string) {
   // await repositoryStore.repository?.pfs.writeFile(`${path}/Arquivo.txt`, "", "utf8");
-  await repositoryStore.createPage(path, 'Sem título');
+  await repoStore.createPage(path, 'Sem título');
   await repositoryStore.loadRepositories();
 }
 
 async function createFolder(path: string) {
-  await repositoryStore.repository?.pfs.mkdir(`${path}/Nova pasta`);
+  await repoStore.repo?.pfs.mkdir(`${path}/Nova pasta`);
   await repositoryStore.loadRepositories();
 }
 
@@ -123,8 +124,8 @@ async function createFolder(path: string) {
       </div>
       <div v-else>
         <div class="text-center fs-5 text-body-tertiary">
-          <div v-if="repositoryStore.repository">
-            O repositório "{{ repositoryStore.repository?.name }}" está vazio.
+          <div v-if="repoStore.repo">
+            O repositório "{{ repoStore.repo?.name }}" está vazio.
           </div>
           <div v-else>
             Nenhum repositório selecionado.

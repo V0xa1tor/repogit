@@ -3,6 +3,7 @@
 const editorTitle = ref<HTMLInputElement | null>();
 const props = defineProps<{file: FSFile}>();
 const repositoryStore = useRepositoryStore();
+const repoStore = useRepoStore();
 
 async function renameFile() {
 
@@ -19,7 +20,7 @@ async function renameFile() {
   if (props.file.path === newPath) return;
 
   try {
-    await repositoryStore.repository?.pfs.rename(props.file.path, newPath);
+    await repoStore.repo?.pfs.rename(props.file.path, newPath);
     window.history.replaceState({}, '', newPath);
     await repositoryStore.loadRepositories();
   } catch(e) {

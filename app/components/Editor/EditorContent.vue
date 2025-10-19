@@ -3,9 +3,10 @@
 const editorContent = ref<HTMLTextAreaElement | null>();
 const props = defineProps<{file: FSFile}>();
 const repositoryStore = useRepositoryStore();
+const repoStore = useRepoStore();
 
 function updateContent() {
-  repositoryStore.repository?.pfs.writeFile(props.file.path, editorContent.value?.value!, 'utf8');
+  repoStore.repo?.pfs.writeFile(props.file.path, editorContent.value?.value!, 'utf8');
 }
 </script>
 

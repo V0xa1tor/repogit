@@ -4,32 +4,13 @@ import LightningFS from "@isomorphic-git/lightning-fs";
 import * as git from "isomorphic-git";
 import { v4 as uuidv4 } from 'uuid';
 import JSZip from "jszip";
-
-export interface FsInstance {
-  name: string;
-  fs: LightningFS;
-  pfs: LightningFS.PromisifiedFS;
-}
+import type FSInstance from "~/types/FSInstance";
 
 export const useRepositoryStore = defineStore("repository", () => {
 
   const appConfig = useAppConfig();
   
-  const repositories = ref<FsInstance[]>([]);
-  const repository = computed(() => {
-    if (!repositoryName.value) return null;
-    const found = repositories.value.find(repo => repo.name === repositoryName.value);
-    return found ? found : null;
-  });
-
-  const repositoryName = ref(localStorage.getItem(appConfig.localStorageRepositoryKey));
-  watch(repositoryName, (newName) => {
-    if (newName) {
-      localStorage.setItem(appConfig.localStorageRepositoryKey, newName);
-    } else {
-      localStorage.removeItem(appConfig.localStorageRepositoryKey);
-    }
-  });
+  const repositories = ref<FSInstance[]>([]);
 
   async function loadRepositories() {
     // API moderna: navigator.storage.databases()
@@ -51,36 +32,16 @@ export const useRepositoryStore = defineStore("repository", () => {
 
     // Inicializa um repo Git
     await git.init({ fs, dir: "/" });
-    setRepository(name);
+    // setRepository(name);
 
     await loadRepositories();
-    return { name, fs, pfs: fs.promises } as FsInstance;
-  }
-
-  function setRepository(name: string | null) {
-    repositoryName.value = name;
+    return { name, fs, pfs: fs.promises } as FSInstance;
   }
 
   async function deleteRepository(name: string) {
     indexedDB.deleteDatabase(name);
-    if (repositoryName.value === name) setRepository(null);
+    // if (repositoryName.value === name) setRepository(null);
     await loadRepositories();
-  }
-
-  async function createPage(path: string, name: string) {
-    let dirPath = `${path}/${name}`;
-    let num = 0;
-    while (await exists(`${dirPath}${num ? ' ' + num : ''}`)) ++num;
-    if (num) dirPath += " " + num;
-    await repository.value?.pfs.mkdir(dirPath);
-    await repository.value?.pfs.writeFile(`${dirPath}/${appConfig.pageFileName}`, '', 'utf8');
-
-    const properties = {
-      id: uuidv4(),
-      order: 1,
-      collapsed: true
-    };
-    await repository.value?.pfs.writeFile(`${dirPath}/${appConfig.propertiesFileName}`, JSON.stringify(properties, null, '\t'), 'utf8');
   }
 
   /** Exporta o FS inteiro como um Blob ZIP */
@@ -136,7 +97,7 @@ export const useRepositoryStore = defineStore("repository", () => {
         await fs.promises.writeFile("/" + path, content, "utf8");
       }
     }
-    setRepository(name);
+    // setRepository(name);
     await loadRepositories();
   }
 
@@ -150,107 +111,13 @@ export const useRepositoryStore = defineStore("repository", () => {
     await loadRepositories();
   }
 
-  async function exists(path: string) {
-    try {
-      await repository.value?.pfs.stat(path);
-      return true; // existe
-    } catch (err) {
-      if (err instanceof Error && (err as any).code === "ENOENT") return false; // não existe
-      throw err; // outro erro inesperado
-    }
-  }
-
-  /**
-   * Função recursiva que lista todos os arquivos e diretórios.
-   * @param dir Caminho inicial (por padrão, a raiz '/')
-   * @returns Lista de arquivos e diretórios a partir de `dir`
-   */
-  async function listAllFilesAndDirs(dir = '/'): Promise<FSItem[]> {
-    const items: FSItem[] = [];
-    if (!repository.value) return items;
-    try {
-      const entries = await repository.value?.pfs.readdir(dir);
-
-      for (const entry of entries) {
-        const fullPath = `${dir === '/' ? '' : dir}/${entry}`;
-        const stat = await repository.value?.pfs.stat(fullPath);
-
-        if (stat.type === 'dir') {
-          // Diretório: busca recursivamente
-          const children = await listAllFilesAndDirs(fullPath);
-          items.push({
-            name: entry,
-            path: fullPath,
-            type: 'dir',
-            children,
-            collapsed: true
-          });
-        } else {
-          // Arquivo
-          items.push({
-            name: entry,
-            path: fullPath,
-            type: 'file'
-          });
-        }
-      }
-    } catch (err) {
-      console.error(`Erro ao ler ${dir}:`, err);
-    }
-
-    return items;
-  }
-
-  async function getFile(path: string): Promise<FSFile | null> {
-    if (!repository.value) return null;
-    return {
-      name: path.replace(/\/$/, "").split("/").pop()!,
-      path,
-      content: await repository.value?.pfs.readFile(path, "utf8")
-    };
-  }
-
-  async function removeRecursively(path: string) {
-  try {
-    // Tenta ler a pasta
-    const files = await repository.value?.pfs.readdir(path)!;
-
-    // Se conseguir ler, é uma pasta: percorre os arquivos/subpastas
-    for (const file of files) {
-      await removeRecursively(`${path}/${file}`);
-    }
-
-    // Após esvaziar, remove a pasta
-    await repository.value?.pfs.rmdir(path);
-  } catch (err: any) {
-    if (err.code === 'ENOTDIR') {
-      // Não é uma pasta, então é arquivo: remove com unlink
-      await repository.value?.pfs.unlink(path);
-    } else if (err.code === 'ENOENT') {
-      // Arquivo/pasta não existe, ignora
-      return;
-    } else {
-      throw err; // outros erros
-    }
-  }
-  await loadRepositories();
-}
-
-
   return {
     repositories,
-    repository,
     loadRepositories,
     createRepository,
-    setRepository,
     deleteRepository,
     renameRepository,
     exportRepositoryZip,
-    importRepositoryZip,
-    listAllFilesAndDirs,
-    createPage,
-    exists,
-    getFile,
-    removeRecursively
+    importRepositoryZip
   };
 });

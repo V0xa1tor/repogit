@@ -17,6 +17,7 @@ function findItemByName(item: FSItem, name: string): FSItem | undefined {
 let ignoreClick = false;
 
 const repositoryStore = useRepositoryStore();
+const repoStore = useRepoStore();
 const props = defineProps<{ item: FSItem }>();
 const emit = defineEmits(['toggle-folder']);
 const folderName = ref<HTMLInputElement>();
@@ -116,7 +117,7 @@ async function renameFolder(item: FSItem, input: HTMLInputElement) {
     return;
   }
 
-  if (await repositoryStore.exists(newPath)) {
+  if (await repoStore.exists(newPath)) {
     alert(`O arquivo "${newName}" já existe.`);
     input.oncontextmenu = null;
     input.value = item.name;
@@ -125,7 +126,7 @@ async function renameFolder(item: FSItem, input: HTMLInputElement) {
   }
 
   try {
-    await repositoryStore.repository?.pfs.rename(item.path, newPath);
+    await repoStore.repo?.pfs.rename(item.path, newPath);
     window.history.replaceState({}, '', newPath);
     await repositoryStore.loadRepositories();
   } catch(e) {
