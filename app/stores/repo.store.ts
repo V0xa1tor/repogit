@@ -77,7 +77,7 @@ export const useRepoStore = defineStore("repo", () => {
           items.push({
             name: entry,
             path: fullPath,
-            type: 'dir',
+            // type: 'dir',
             children,
             collapsed: true
           });
@@ -86,7 +86,7 @@ export const useRepoStore = defineStore("repo", () => {
           items.push({
             name: entry,
             path: fullPath,
-            type: 'file'
+            // type: 'file'
           });
         }
       }
@@ -108,12 +108,20 @@ export const useRepoStore = defineStore("repo", () => {
         const stat = await repo.value?.pfs.stat(fullPath);
 
         if (stat.type === 'dir' && entry !== ".git") {
+          
+          // Tipo do item
+          const type = await exists(`${fullPath}/${appConfig.pageFileName}`)
+            ? 'page'
+            : await exists(`${fullPath}/${appConfig.databaseFileName}`)
+            ? 'database'
+            : undefined;
+          
           // Diretório: busca recursivamente
           const children = await listItems(fullPath);
           items.push({
             name: entry,
             path: fullPath,
-            type: 'dir',
+            type,
             children,
             collapsed: true
           });

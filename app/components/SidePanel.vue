@@ -10,8 +10,7 @@ const topBarHeight = ref(0);
 
 const treeData = ref<FSItem>({
   name: "root",
-  path: "/",
-  type: "dir"
+  path: "/"
 });
 watch(() => repoStore.repo, async (newRepo) => {
   if (newRepo) {

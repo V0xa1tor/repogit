@@ -5,7 +5,7 @@ import appConfig from '~/app.config';
 // Busca recursiva do item pela name e type
 function findItemByName(item: FSItem, name: string): FSItem | undefined {
   for (const child of item.children!) {
-    if (child.name === name && child.type === 'dir') return child;
+    if (child.name === name) return child;
     if (child.children) {
       const found = findItemByName(child, name);
       if (found) return found;
@@ -26,7 +26,7 @@ function toggleFolder(item: FSItem) {
   item.collapsed = !item.collapsed;
   // Não emite para cima, pois o estado é local e recursivo
   // Espera renderização e aplica sortable na pasta expandida correta
-  if (item.type === 'dir' && !item.collapsed && item.children) {
+  if (!item.collapsed && item.children) {
     nextTick(() => setupSortable('tree'));
   }
 }
@@ -148,58 +148,37 @@ async function renameFolder(item: FSItem, input: HTMLInputElement) {
         <div
           class="file hstack align-items-center rounded-2 py-1 px-2"
         >
-          <template v-if="child.type === 'dir'">
-            <i
-              class="text-body-tertiary"
-              :class="child.collapsed ? 'bi bi-chevron-right' : 'bi bi-chevron-down'"
-              style="font-size:1.2em"
-              @click="!ignoreClick ? toggleFolder(child) : null"
-            ></i>
-            <div
-              class="input-wrapper w-100"
-              @click="navigateTo(child.path)"
-              @dblclick="(e) => renameFocus((e.target as HTMLLIElement).querySelector('input') as HTMLInputElement)"
-            >
-              <input readonly
-                @keydown="(e) => { if (e.key === 'Enter') (e.target as HTMLInputElement).blur(); }"
-                @focusout="async (e) => await renameFolder(child, e.target as HTMLInputElement)"
-                class="flex-grow-1 text-truncate form-control p-0 px-2 border-0 bg-transparent"
-                :value="child.name"
-              />
-            </div>
-          </template>
-          <template v-else>
+          <i
+            class="text-body-tertiary me-2 h-100 d-flex align-items-center"
+            :class="{
+              'opacity-0': !(child.children && child.children.length),
+              'bi-chevron-right': child.collapsed,
+              'bi-chevron-down': !child.collapsed
+            }"
+            @click="(child.children && child.children.length) && !ignoreClick ? toggleFolder(child) : null"
+          ></i>
+          <div
+            class="input-wrapper w-100 hstack"
+            @click="navigateTo(child.path)"
+            @dblclick="(e) => renameFocus((e.target as HTMLLIElement).querySelector('input') as HTMLInputElement)"
+          >
             <i
               class="bi"
               :class="{
-                'bi-file-earmark-text': child.name == appConfig.pageFileName,
-                'bi-database': child.name == appConfig.databaseFileName,
-                'bi-gear': child.name == appConfig.settingsFileName,
-                'bi-puzzle': child.name == appConfig.propertiesFileName,
-                'bi-file-earmark': child.name
-                  != appConfig.pageFileName
-                  && appConfig.databaseFileName
-                  && appConfig.settingsFileName
-                  && appConfig.propertiesFileName
+                'bi-file-earmark-text': child.type == 'page',
+                'bi-database': child.type == 'database'
               }"
               style="font-size:1.2em"
-              @click="!ignoreClick ? toggleFolder(child) : null"
             ></i>
-            <div
-              class="input-wrapper w-100"
-              @click="navigateTo(child.path)"
-              @dblclick="(e) => renameFocus((e.target as HTMLLIElement).querySelector('input') as HTMLInputElement)"
-            >
-              <input readonly
-                @keydown="(e) => { if (e.key === 'Enter') (e.target as HTMLInputElement).blur(); }"
-                @focusout="async (e) => await renameFolder(child, e.target as HTMLInputElement)"
-                class="flex-grow-1 text-truncate form-control p-0 px-2 border-0 bg-transparent"
-                :value="child.name"
-              />
-            </div>
-          </template>
+            <input readonly
+              @keydown="(e) => { if (e.key === 'Enter') (e.target as HTMLInputElement).blur(); }"
+              @focusout="async (e) => await renameFolder(child, e.target as HTMLInputElement)"
+              class="flex-grow-1 text-truncate form-control p-0 px-2 border-0 bg-transparent"
+              :value="child.name"
+            />
+          </div>
         </div>
-        <ul v-if="child.type === 'dir' && !child.collapsed && child.children && child.children.length > 0" class="list-unstyled ms-3">
+        <ul v-if="!child.collapsed && child.children && child.children.length > 0" class="list-unstyled" style="margin-left: 24px;">
           <FileTree :item="child" @toggle-folder="toggleFolder" />
         </ul>
       </li>

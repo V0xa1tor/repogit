@@ -1,7 +1,7 @@
 interface FSItem {
   name: string;
   path: string;
-  type: 'file' | 'dir';
+  type?: 'page' | 'database';
   children?: FSItem[]; // Apenas para diretórios
   collapsed?: boolean;
 }
