@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import * as bootstrap from "bootstrap";
+import type { forEach } from "jszip";
 
 const repositoryStore = useRepositoryStore();
 const repoStore = useRepoStore();
@@ -14,7 +15,8 @@ const treeData = ref<FSItem>({
 });
 watch(() => repoStore.repo, async (newRepo) => {
   if (newRepo) {
-    treeData.value!.children = await repoStore.listAllFilesAndDirs();
+    const items = await repoStore.listItems();
+    treeData.value!.children = items;
   } else {
     treeData.value!.children = [];
   }

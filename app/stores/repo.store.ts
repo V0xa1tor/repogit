@@ -97,6 +97,35 @@ export const useRepoStore = defineStore("repo", () => {
     return items;
   }
 
+  async function listItems(dir = '/'): Promise<FSItem[]> {
+    const items: FSItem[] = [];
+    if (!repo.value) return items;
+    try {
+      const entries = await repo.value?.pfs.readdir(dir);
+
+      for (const entry of entries) {
+        const fullPath = `${dir === '/' ? '' : dir}/${entry}`;
+        const stat = await repo.value?.pfs.stat(fullPath);
+
+        if (stat.type === 'dir' && entry !== ".git") {
+          // Diretório: busca recursivamente
+          const children = await listItems(fullPath);
+          items.push({
+            name: entry,
+            path: fullPath,
+            type: 'dir',
+            children,
+            collapsed: true
+          });
+        }
+      }
+    } catch (err) {
+      console.error(`Erro ao ler ${dir}:`, err);
+    }
+
+    return items;
+  }
+
   async function getFile(path: string): Promise<FSFile | null> {
     if (!repo.value) return null;
     return {
@@ -136,6 +165,7 @@ export const useRepoStore = defineStore("repo", () => {
     repo,
     setRepository,
     listAllFilesAndDirs,
+    listItems,
     createPage,
     exists,
     getFile,
