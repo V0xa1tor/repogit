@@ -143,7 +143,7 @@ async function renameFolder(item: FSItem, input: HTMLInputElement) {
 
 <template>
   <ul class="list-unstyled gap-1 d-flex flex-column user-select-none m-0">
-    <template v-for="child in item.children">
+    <template v-for="child in item.children" :key="child.id">
       <li
         class="tree-item rounded gap-1 d-flex flex-column"
         :data-path="child.path"

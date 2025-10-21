@@ -75,6 +75,7 @@ export const useRepoStore = defineStore("repo", () => {
           // Diretório: busca recursivamente
           const children = await listAllFilesAndDirs(fullPath);
           items.push({
+            id: '',
             name: entry,
             path: fullPath,
             // type: 'dir',
@@ -84,6 +85,7 @@ export const useRepoStore = defineStore("repo", () => {
         } else {
           // Arquivo
           items.push({
+            id: '',
             name: entry,
             path: fullPath,
             // type: 'file'
@@ -121,6 +123,7 @@ export const useRepoStore = defineStore("repo", () => {
           // Diretório: busca recursivamente
           const children = await listItems(fullPath);
           items.push({
+            id: properties.id,
             name: entry,
             path: fullPath,
             type,
