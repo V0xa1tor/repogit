@@ -38,7 +38,7 @@ export const useRepoStore = defineStore("repo", () => {
     await repo.value?.pfs.mkdir(dirPath);
     await repo.value?.pfs.writeFile(`${dirPath}/${appConfig.pageFileName}`, '', 'utf8');
 
-    const properties = {
+    const properties: properties = {
       id: uuidv4(),
       order: 1,
       collapsed: true
@@ -116,6 +116,8 @@ export const useRepoStore = defineStore("repo", () => {
             ? 'database'
             : undefined;
           
+          const properties = await getProperties(fullPath);
+          
           // Diretório: busca recursivamente
           const children = await listItems(fullPath);
           items.push({
@@ -123,7 +125,7 @@ export const useRepoStore = defineStore("repo", () => {
             path: fullPath,
             type,
             children,
-            collapsed: true
+            collapsed: properties.collapsed
           });
         }
       }
@@ -132,6 +134,18 @@ export const useRepoStore = defineStore("repo", () => {
     }
 
     return items;
+  }
+
+  async function getProperties(path: string) {
+    const propertiesPath = `${path}/${appConfig.propertiesFileName}`;
+    // const hasProperties = await exists(propertiesPath);
+    const properties = await getFile(propertiesPath);
+    return JSON.parse(properties?.content!) as properties;
+  }
+
+  async function setProperties(path: string, properties: properties) {
+    const propertiesPath = `${path}/${appConfig.propertiesFileName}`;
+    repo.value?.pfs.writeFile(propertiesPath, JSON.stringify(properties), 'utf8');
   }
 
   async function getFile(path: string): Promise<FSFile | null> {
@@ -175,6 +189,8 @@ export const useRepoStore = defineStore("repo", () => {
     listAllFilesAndDirs,
     listItems,
     createPage,
+    getProperties,
+    setProperties,
     exists,
     getFile,
     removeRecursively

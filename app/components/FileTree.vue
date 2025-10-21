@@ -21,7 +21,10 @@ const repoStore = useRepoStore();
 const props = defineProps<{ item: FSItem }>();
 const emit = defineEmits(['toggle-folder']);
 
-function toggleFolder(item: FSItem) {
+async function toggleFolder(item: FSItem) {
+  const properties = await repoStore.getProperties(item.path);
+  properties.collapsed = !item.collapsed;
+  await repoStore.setProperties(item.path, properties);
   // Garante reatividade usando Vue.set se necessário
   item.collapsed = !item.collapsed;
   // Não emite para cima, pois o estado é local e recursivo
