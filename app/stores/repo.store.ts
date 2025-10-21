@@ -112,11 +112,7 @@ export const useRepoStore = defineStore("repo", () => {
         if (stat.type === 'dir' && entry !== ".git") {
           
           // Tipo do item
-          const type = await exists(`${fullPath}/${appConfig.pageFileName}`)
-            ? 'page'
-            : await exists(`${fullPath}/${appConfig.databaseFileName}`)
-            ? 'database'
-            : undefined;
+          const type = await getItemType(fullPath);
           
           const properties = await getProperties(fullPath);
           
@@ -149,6 +145,14 @@ export const useRepoStore = defineStore("repo", () => {
   async function setProperties(path: string, properties: properties) {
     const propertiesPath = `${path}/${appConfig.propertiesFileName}`;
     repo.value?.pfs.writeFile(propertiesPath, JSON.stringify(properties), 'utf8');
+  }
+
+  async function getItemType(path: string) {
+    return await exists(`${path}/${appConfig.pageFileName}`)
+      ? 'page'
+      : await exists(`${path}/${appConfig.databaseFileName}`)
+      ? 'database'
+      : undefined;
   }
 
   async function getFile(path: string): Promise<FSFile | null> {
@@ -194,6 +198,7 @@ export const useRepoStore = defineStore("repo", () => {
     createPage,
     getProperties,
     setProperties,
+    getItemType,
     exists,
     getFile,
     removeRecursively

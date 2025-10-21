@@ -1,14 +1,23 @@
 <script setup lang="ts">
 const path = decodeURIComponent(useRouter().currentRoute.value.path);
-const repositoryStore = useRepositoryStore();
+const appConfig = useAppConfig();
 const repoStore = useRepoStore();
 const file = ref<FSFile | null>(null);
+const type = await repoStore.getItemType(path);
 
 watch(
   () => repoStore.repo,
   async (repo) => {
     if (repo) {
-      file.value = await repoStore.getFile(path);
+      if (type === 'page') {
+        file.value = await repoStore.getFile(`${path}/${appConfig.pageFileName}`);
+      } else if (type === 'database') {
+        file.value = await repoStore.getFile(`${path}/${appConfig.databaseFileName}`);
+      } else {
+        file.value = null;
+      }
+    } else {
+      file.value = null;
     }
   },
   { immediate: true }
@@ -29,6 +38,7 @@ onMounted(async () => {
   // pageText!.value = block.value?.content.text ?? '';
   // pageText.focus();
   // file.value = await repositoryStore.getFile(path) ?? null;
+  
 });
 </script>
 
