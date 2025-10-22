@@ -144,7 +144,7 @@ export const useRepoStore = defineStore("repo", () => {
 
   async function setProperties(path: string, properties: properties) {
     const propertiesPath = `${path}/${appConfig.propertiesFileName}`;
-    repo.value?.pfs.writeFile(propertiesPath, JSON.stringify(properties), 'utf8');
+    repo.value?.pfs.writeFile(propertiesPath, JSON.stringify(properties, null, "\t"), 'utf8');
   }
 
   async function getItemType(path: string) {
