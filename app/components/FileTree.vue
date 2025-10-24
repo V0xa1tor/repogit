@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import Sortable from 'sortablejs';
 import appConfig from '~/app.config';
+import type { FSDir } from '~/types/filesystem/FSDir';
+import type { FSFile } from '~/types/filesystem/FSFile';
 
 // Busca recursiva do item pela name e type
 function findItemByName(item: FSItem, name: string): FSItem | undefined {
@@ -18,7 +20,7 @@ let ignoreClick = false;
 
 const repositoryStore = useRepositoryStore();
 const repoStore = useRepoStore();
-const props = defineProps<{ item: FSItem }>();
+const props = defineProps<{ item: FSDir }>();
 const emit = defineEmits(['toggle-folder']);
 
 async function toggleFolder(item: FSItem) {
@@ -95,7 +97,7 @@ function renameFocus(input: HTMLInputElement) {
   input.select();
 }
 
-async function renameFolder(item: FSItem, input: HTMLInputElement) {
+async function renameFolder(item: FSDir, input: HTMLInputElement) {
 
   const path = item.path.split('/');
   path.pop();

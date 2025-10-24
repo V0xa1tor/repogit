@@ -2,40 +2,35 @@ import { defineStore } from "pinia";
 import { ref } from "vue";
 import LightningFS from "@isomorphic-git/lightning-fs";
 import * as git from "isomorphic-git";
-import { v4 as uuidv4 } from 'uuid';
 import JSZip from "jszip";
-import type FSInstance from "~/types/FSInstance";
+import type { FSDir } from "~/types/filesystem/FSDir";
 
 export const useRepositoryStore = defineStore("repository", () => {
 
   const appConfig = useAppConfig();
+  const filesystemStore = useFilesystemStore();
   
-  const repositories = ref<FSInstance[]>([]);
+  const repositories = ref<FSDir[]>([]);
 
-  async function loadRepositories() {
-    // API moderna: navigator.storage.databases()
-    if ("databases" in indexedDB) {
-      // @ts-ignore - algumas libs ainda não tiparam
-      const dbs = await indexedDB.databases();
-      repositories.value = dbs.map(db => {
-        const fs = new LightningFS(db.name!);
-        return { name: db.name!, fs, pfs: fs.promises };
-      });
-    } else {
-      // fallback se databases não existir
-      console.warn("indexedDB.databases() não suportado neste navegador.");
-    }
+  /**
+   * Creates a repository (directory with an ".git")
+   * @param path Directory to create repository
+   * @param name The name of repository
+   */
+  async function createRepository(name: string, path = "/") {
+    const repositoryPath = `${path == "/" ? "" : path}/${name}`;
+    await filesystemStore.filesystem.promises.mkdir(repositoryPath);
+    await git.init({ fs: filesystemStore.filesystem, dir: repositoryPath });
   }
 
-  async function createRepository(name: string) {
-    const fs = new LightningFS(name);
-
-    // Inicializa um repo Git
-    await git.init({ fs, dir: "/" });
-    // setRepository(name);
-
-    await loadRepositories();
-    return { name, fs, pfs: fs.promises } as FSInstance;
+  /**
+   * Lists all directories that has a ".git" folder (repositories)
+   * @param path Directory to list repositories
+   * @returns List of repositories
+   */
+  async function listRepositories(path = "/") {
+    const dirs = (await filesystemStore.listFilesAndDirs(path)).filter(item => item.type == "dir");
+    return dirs.filter(async dir => await filesystemStore.exists(`${dir.path}/.git`));
   }
 
   async function deleteRepository(name: string) {
@@ -113,7 +108,7 @@ export const useRepositoryStore = defineStore("repository", () => {
 
   return {
     repositories,
-    loadRepositories,
+    listRepositories,
     createRepository,
     deleteRepository,
     renameRepository,

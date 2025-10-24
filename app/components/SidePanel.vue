@@ -1,6 +1,5 @@
 <script setup lang="ts">
-import * as bootstrap from "bootstrap";
-import type { forEach } from "jszip";
+import type { FSDir } from "~/types/filesystem/FSDir";
 
 const repositoryStore = useRepositoryStore();
 const repoStore = useRepoStore();
@@ -8,16 +7,19 @@ const breakpoint = useBreakpointStore();
 const actionMenuHeight = ref(0);
 const topBarHeight = ref(0);
 
-const treeData = ref<FSItem>({
+const filesystemStore = useFilesystemStore();
+
+const root = ref<FSDir>({
   name: "root",
-  path: "/"
+  path: "/",
+  type: "dir"
 });
-watch(() => repoStore.repo, async (newRepo) => {
-  if (newRepo) {
-    const items = await repoStore.listItems();
-    treeData.value!.children = items;
+watch(() => filesystemStore.filesystem, async (fs) => {
+  if (fs) {
+    const items = await filesystemStore.listFilesAndDirs("/", true);
+    root.value!.children = items;
   } else {
-    treeData.value!.children = [];
+    root.value!.children = undefined;
   }
 }, { immediate: true });
 
@@ -26,7 +28,7 @@ onMounted(async () => {
     fetchElementData: async (el) => {
       const path = el.dataset.path;
       const input = el.querySelector("input")!;
-      const stat = await repoStore.repo?.pfs.stat(path!);
+      const stat = await filesystemStore.filesystem.promises.stat(path!);
       return { path, stat, input, text: el.textContent };
     },
     actionsGroups: [
@@ -39,13 +41,19 @@ onMounted(async () => {
         iconClass: 'folder',
         // isShown: async (data) => data.stat?.isDirectory(),
         isShown: () => false,
-        onClick: async (data) => createFolder(data.path!)
+        onClick: async (data) => await createFolder(data.path!)
+      },
+      createRepository: {
+        name: 'Criar repositório',
+        iconClass: 'archive',
+        isShown: async (data) => data.stat?.isDirectory(),
+        onClick: async (data) => await repositoryStore.createRepository("Teste")
       },
       createFile: {
         name: 'Criar página',
         iconClass: 'file-earmark-text',
         isShown: async (data) => data.stat?.isDirectory(),
-        onClick: async (data) => createFile(data.path!)
+        onClick: async (data) => await createFile(data.path!)
       },
       createDatabase: {
         name: 'Criar banco de dados',
@@ -66,7 +74,7 @@ onMounted(async () => {
         isShown: async (data) => data.path !== '/',
         onClick: async (data) => {
           if (data.path && !confirm(`Excluir "${data.path}"?`)) return;
-          await repoStore.removeRecursively(data.path);
+          // await repoStore.removeRecursively(data.path);
         }
       }
     }
@@ -113,9 +121,18 @@ async function createFolder(path: string) {
     :style="`top: ${breakpoint.isMdUp ? 0 : topBarHeight}px; bottom: ${breakpoint.isMdUp ? 0 : actionMenuHeight}px;`"
     tabindex="-1"
   >
+  <div class="offcanvas-header pb-0">
+    <select @change="navigateTo(($event.target as HTMLOptionElement).value)" class="form-select">
+      <option :value="root.path">{{root.name}}</option>
+      <hr />
+      <optgroup label="Repositórios:">
+        <option v-for="repo in repositoryStore.repositories" :value="repo.path">{{repo.name}}</option>
+      </optgroup>
+    </select>
+  </div>
     <div data-path="/" class="offcanvas-body vstack gap-3">
-      <div v-if="treeData.children?.length" id="offcanvas-blocks" class="vstack gap-1">
-        <FileTree :item="treeData" />
+      <div v-if="root.children?.length" id="offcanvas-blocks" class="vstack gap-1">
+        <FileTree :item="root" />
       </div>
       <div v-else>
         <div class="text-center fs-5 text-body-tertiary">

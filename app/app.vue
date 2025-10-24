@@ -2,6 +2,7 @@
 
 const loading = ref(true);
 const viewport = useViewportStore();
+const repositoryStore = useRepositoryStore();
 
 onMounted(async () => {
   viewport.updateWindowSize();
@@ -11,7 +12,10 @@ onMounted(async () => {
   window.addEventListener('orientationchange', setAppHeight);
   setAppHeight();
 
-  useRepositoryStore().loadRepositories();
+  // useRepositoryStore().loadRepositories();
+  useFilesystemStore();
+  await useSettingsStore().createSettings("/");
+  repositoryStore.repositories = await repositoryStore.listRepositories();
 
   await sleep(200);
   loading.value = false;

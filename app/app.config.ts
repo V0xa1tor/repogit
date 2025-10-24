@@ -1,7 +1,5 @@
 export default defineAppConfig({
-  version: 1,
-  uuidSeparator: "__",
-  localStorageRepositoryKey: 'REPOGIT',
+  fsName: 'REPOGIT',
   pageFileName: 'page.md',
   databaseFileName: 'db.json',
   settingsFileName: 'settings.json',

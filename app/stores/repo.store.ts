@@ -1,22 +1,18 @@
 import { defineStore } from "pinia";
-import { ref } from "vue";
-import LightningFS from "@isomorphic-git/lightning-fs";
-import * as git from "isomorphic-git";
 import { v4 as uuidv4 } from 'uuid';
-import JSZip from "jszip";
-import type FSInstance from "~/types/FSInstance";
+import { ref } from "vue";
+import type { FSFile } from "~/types/filesystem/FSFile";
+import type { FSInstance } from "~/types/filesystem/FSInstance";
+import type { FSItem } from "~/types/filesystem/FSItem";
+import type { item } from "~/types/repo/item";
+import type { properties } from "~/types/repo/properties";
 
 export const useRepoStore = defineStore("repo", () => {
 
   const appConfig = useAppConfig();
   const repositoryStore = useRepositoryStore();
   
-  const repo = computed(() => {
-    if (!repoName.value) return null;
-    const found = repositoryStore.repositories.find((r: FSInstance) => r.name === repoName.value);
-    return found ? found : null;
-  });
-
+  // Name of selected repository
   const repoName = ref(localStorage.getItem(appConfig.localStorageRepositoryKey));
   watch(repoName, (newName) => {
     if (newName) {
@@ -24,6 +20,13 @@ export const useRepoStore = defineStore("repo", () => {
     } else {
       localStorage.removeItem(appConfig.localStorageRepositoryKey);
     }
+  });
+
+  // Selected repository
+  const repo = computed(() => {
+    if (!repoName.value) return null;
+    const found = repositoryStore.repositories.find((r: FSInstance) => r.name === repoName.value);
+    return found ? found : null;
   });
 
   function setRepository(name: string | null) {
@@ -99,8 +102,44 @@ export const useRepoStore = defineStore("repo", () => {
     return items;
   }
 
-  async function listItems(dir = '/'): Promise<FSItem[]> {
+  async function listFSItems(dir = '/'): Promise<FSItem[]> {
     const items: FSItem[] = [];
+    if (!repo.value) return items;
+    try {
+      const entries = await repo.value?.pfs.readdir(dir);
+
+      for (const entry of entries) {
+        const fullPath = `${dir === '/' ? '' : dir}/${entry}`;
+        const stat = await repo.value?.pfs.stat(fullPath);
+
+        if (stat.type === 'dir' && entry !== ".git") {
+          
+          // Tipo do item
+          const type = await getItemType(fullPath);
+          
+          const properties = await getProperties(fullPath);
+          
+          // Diretório: busca recursivamente
+          const children = await listFSItems(fullPath);
+          items.push({
+            id: properties.id,
+            name: entry,
+            path: fullPath,
+            type,
+            children,
+            collapsed: properties.collapsed
+          });
+        }
+      }
+    } catch (err) {
+      console.error(`Erro ao ler ${dir}:`, err);
+    }
+
+    return items;
+  }
+
+  async function listItems(dir = '/'): Promise<item[]> {
+    const items: item[] = [];
     if (!repo.value) return items;
     try {
       const entries = await repo.value?.pfs.readdir(dir);
