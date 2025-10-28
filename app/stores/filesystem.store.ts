@@ -109,14 +109,13 @@ export const useFilesystemStore = defineStore("filesystem", () => {
       const entries = await filesystem.promises.readdir(dir);
       
       for (const entry of entries) {
-        console.log(entry);
         const fullPath = `${dir == "/" ? "" : dir}/${entry}`;
         const stat = await filesystem.promises.stat(fullPath);
 
         if (stat.type == "dir") {
           const isRepo = await exists(`${fullPath}/.git`);
-          const children = recursive && (entry != ".git") ? await list(fullPath, true) : undefined;
-          const properties = (entry != ".git") ? await propertiesStore.getProperties(fullPath) : undefined;
+          const children = recursive && (entry != ".git") && !isRepo ? await list(fullPath, true) : undefined;
+          const properties = (entry != ".git") && !isRepo ? await propertiesStore.getProperties(fullPath) : undefined;
           items.push({
             name: entry,
             path: fullPath,

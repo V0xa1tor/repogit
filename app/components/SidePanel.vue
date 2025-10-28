@@ -25,7 +25,6 @@ watch(() => router.currentRoute.value.path, async (newPath) => {
   }
 
   item!.children = await filesystemStore.list(path.value, true);
-  console.log(item.isRepo)
   filesystemStore.root = item;
 }, { immediate: true });
 // const groups = computed(() => {
