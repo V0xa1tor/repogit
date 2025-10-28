@@ -45,10 +45,11 @@ onMounted(async () => {
   new BootstrapMenu('[data-path]', {
     fetchElementData: async (el) => {
       const path = el.dataset.path;
+      const isOnRoot = path?.match(/\//g)?.length! <= 1;
       const item = await filesystemStore.getItem(path!);
       const input = el.querySelector("input")!;
       const stat = await filesystemStore.filesystem.promises.stat(path!);
-      return { path, item, stat, input, text: el.textContent };
+      return { path, isOnRoot, item, stat, input, text: el.textContent };
     },
     actionsGroups: [
       ['createRepository', "createDocs"],
@@ -60,31 +61,31 @@ onMounted(async () => {
       createRepository: {
         name: 'Criar repositório',
         iconClass: 'archive',
-        isShown: async (data) => path.value == "/",
+        isShown: async (data) => data.stat?.type == "dir" && path.value == "/" && !data.item.isRepo,
         onClick: async (data) => await repositoryStore.createRepository("Repo", data.path)
       },
       createDocs: {
         name: 'Criar docs',
         iconClass: 'book',
-        isShown: async (data) => path.value == "/",
+        isShown: async (data) => data.stat?.type == "dir" && path.value == "/" && !data.item.isRepo,
         onClick: async (data) => await repositoryStore.createDocs()
       },
       createFolder: {
         name: 'Criar pasta',
         iconClass: 'folder',
-        isShown: async (data) => path.value == "/" && data.item?.type == "item",
+        isShown: async (data) => path.value == "/" && data.stat?.type == "dir" && !data.item.isRepo && data.isOnRoot,
         onClick: async (data) => await createFolder(data.path!)
       },
       createFile: {
         name: 'Criar página',
         iconClass: 'file-earmark-text',
-        isShown: async (data) => data.item?.properties.id != "root" && data.stat?.isDirectory(),
+        isShown: async (data) => data.item?.properties.id != "root" && data.stat?.isDirectory() && path.value != "/",
         onClick: async (data) => await createFile(data.path!)
       },
       createDatabase: {
         name: 'Criar banco de dados',
         iconClass: 'database',
-        isShown: async (data) => data.item?.properties.id != "root" && data.stat?.isDirectory(),
+        isShown: async (data) => data.item?.properties.id != "root" && data.stat?.isDirectory() && path.value != "/",
         isEnabled: () => false,
         onClick: () => {}
       },
