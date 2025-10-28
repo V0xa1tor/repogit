@@ -4,7 +4,7 @@ import { ref } from "vue";
 import type { FSFile } from "~/types/filesystem/FSFile";
 import type { FSInstance } from "~/types/filesystem/FSInstance";
 import type { FSItem } from "~/types/filesystem/FSItem";
-import type { item } from "~/types/repo/item";
+import type { item } from "~/types/filesystem/FSItem";
 import type { properties } from "~/types/repo/properties";
 
 export const useRepoStore = defineStore("repo", () => {
@@ -14,13 +14,13 @@ export const useRepoStore = defineStore("repo", () => {
   
   // Name of selected repository
   const repoName = ref(localStorage.getItem(appConfig.localStorageRepositoryKey));
-  watch(repoName, (newName) => {
-    if (newName) {
-      localStorage.setItem(appConfig.localStorageRepositoryKey, newName);
-    } else {
-      localStorage.removeItem(appConfig.localStorageRepositoryKey);
-    }
-  });
+  // watch(repoName, (newName) => {
+  //   if (newName) {
+  //     localStorage.setItem(appConfig.localStorageRepositoryKey, newName);
+  //   } else {
+  //     localStorage.removeItem(appConfig.localStorageRepositoryKey);
+  //   }
+  // });
 
   // Selected repository
   const repo = computed(() => {

@@ -12,23 +12,23 @@ export const useTasksStore = defineStore('tasks', () => {
 
   const tasks = ref<Task[]>([]);
 
-  watch(
-    () => useDatabasesStore().openedDb,
-    (db) => {
-      if (!db?.tasks) {
-        tasks.value = [];
-        return;
-      }
+  // watch(
+  //   () => useDatabasesStore().openedDb,
+  //   (db) => {
+  //     if (!db?.tasks) {
+  //       tasks.value = [];
+  //       return;
+  //     }
 
-      const observable = from(liveQuery(() => db.tasks.toArray()));
-      const reactive = useObservable(observable, { initialValue: [] });
+  //     const observable = from(liveQuery(() => db.tasks.toArray()));
+  //     const reactive = useObservable(observable, { initialValue: [] });
 
-      watch(() => reactive.value, (value) => {
-        tasks.value = value;
-      }, { immediate: true });
-    },
-    { immediate: true }
-  );
+  //     watch(() => reactive.value, (value) => {
+  //       tasks.value = value;
+  //     }, { immediate: true });
+  //   },
+  //   { immediate: true }
+  // );
 
   async function addTask(title: string, done: boolean) {
     return await useDatabasesStore().openedDb?.tasks?.add({

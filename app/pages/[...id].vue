@@ -1,30 +1,35 @@
 <script setup lang="ts">
-const path = decodeURIComponent(useRouter().currentRoute.value.path);
-const appConfig = useAppConfig();
-const repoStore = useRepoStore();
-const file = ref<FSFile | null>(null);
-const type = await repoStore.getItemType(path);
+import type { FSDir } from '~/types/filesystem/FSDir';
+import type { FSFile } from '~/types/filesystem/FSFile';
+import type { FSItem } from '~/types/filesystem/FSItem';
 
-watch(
-  () => repoStore.repo,
-  async (repo) => {
-    if (repo) {
-      if (type === 'page') {
-        file.value = await repoStore.getFile(`${path}/${appConfig.pageFileName}`);
-      } else if (type === 'database') {
-        file.value = await repoStore.getFile(`${path}/${appConfig.databaseFileName}`);
-      } else {
-        file.value = null;
-      }
-    } else {
-      file.value = null;
-    }
-  },
-  { immediate: true }
-);
+const item = ref<FSItem | null>(null);
+
+const appConfig = useAppConfig();
+const filesystemStore = useFilesystemStore();
+const path = decodeURIComponent(useRouter().currentRoute.value.path);
+// const type = await repoStore.getItemType(path);
+
+// watch(
+//   () => filesystemStore.root,
+//   async (root) => {
+//     if (root) {
+//       if (type === 'page') {
+//         file.value = await repoStore.getFile(`${path}/${appConfig.pageFileName}`);
+//       } else if (type === 'database') {
+//         file.value = await repoStore.getFile(`${path}/${appConfig.databaseFileName}`);
+//       } else {
+//         file.value = null;
+//       }
+//     } else {
+//       file.value = null;
+//     }
+//   },
+//   { immediate: true }
+// );
 
 useHead({
-  title: () => file.value?.name || 'Sem título'
+  title: () => item.value?.dir.name || 'Sem nome'
 });
 
 // watch(block, async (newBlock) => {
@@ -38,12 +43,12 @@ onMounted(async () => {
   // pageText!.value = block.value?.content.text ?? '';
   // pageText.focus();
   // file.value = await repositoryStore.getFile(path) ?? null;
-  
+  item.value = await filesystemStore.getItem(path);
 });
 </script>
 
 <template>
-  <div class="vstack">
+  <!-- <div class="vstack">
     <template v-if="file">
       <EditorTitle :file="file" />
       <EditorContent :file="file" />
@@ -51,5 +56,6 @@ onMounted(async () => {
     <template v-else>
       <div class="text-center text-muted py-5">Carregando arquivo...</div>
     </template>
-  </div>
+  </div> -->
+  {{ item }}
 </template>

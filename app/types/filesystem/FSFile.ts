@@ -1,6 +1,6 @@
 export interface FSFile {
+  type: "file";
   name: string;
   path: string;
-  type: "file";
   content?: string;
 }

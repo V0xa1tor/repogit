@@ -1,0 +1,1 @@
+export type itemType = "folder" | "page" | "database";

@@ -11,23 +11,23 @@ export const useBlocksStore = defineStore('blocks', () => {
 
   const blocks = ref<PageBlock[]>([]);
 
-  watch(
-    () => useDatabasesStore().openedDb,
-    (db) => {
-      if (!db?.blocks) {
-        blocks.value = [];
-        return;
-      }
+  // watch(
+  //   () => useDatabasesStore().openedDb,
+  //   (db) => {
+  //     if (!db?.blocks) {
+  //       blocks.value = [];
+  //       return;
+  //     }
 
-      const observable = from(liveQuery(() => db.blocks.toArray()));
-      const reactive = useObservable(observable, { initialValue: [] });
+  //     const observable = from(liveQuery(() => db.blocks.toArray()));
+  //     const reactive = useObservable(observable, { initialValue: [] });
 
-      watch(() => reactive.value, (value) => {
-        blocks.value = value;
-      }, { immediate: true });
-    },
-    { immediate: true }
-  );
+  //     watch(() => reactive.value, (value) => {
+  //       blocks.value = value;
+  //     }, { immediate: true });
+  //   },
+  //   { immediate: true }
+  // );
 
   async function addBlock(title: string, text: string) {
     return await useDatabasesStore().openedDb?.blocks?.add({

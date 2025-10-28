@@ -1,5 +1,8 @@
+import type { itemType } from "../filesystem/itemType";
+
 export interface properties {
-  id: string,
-  order: number,
-  collapsed: boolean
+  id: string;
+  type: itemType;
+  order: number;
+  collapsed: boolean;
 }

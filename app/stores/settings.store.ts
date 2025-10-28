@@ -1,13 +1,25 @@
+import type { settings } from "~/types/repo/settings";
+
 export const useSettingsStore = defineStore('settings', () => {
 
   const appConfig = useAppConfig();
   const filesystemStore = useFilesystemStore();
 
-  async function createSettings(path: string) {
-    await filesystemStore.filesystem.promises.writeFile(`${path == "/" ? "" : path}/${appConfig.settingsFileName}`, JSON.stringify({}), "utf8");
+  const rootSettings: settings = {
+    selectedTheme: "device",
+    theme: {
+      light: {},
+      dark: {}
+    },
+    actions: []
+  };
+
+  async function createSettings(path: string, settings: settings) {
+    await filesystemStore.filesystem.promises.writeFile(`${path == "/" ? "" : path}/${appConfig.settingsFileName}`, JSON.stringify(settings), "utf8");
   }
 
   return {
-    createSettings
+    createSettings,
+    rootSettings
   };
 });

@@ -1,8 +1,7 @@
 <script setup lang="ts">
 import Sortable from 'sortablejs';
-import appConfig from '~/app.config';
 import type { FSDir } from '~/types/filesystem/FSDir';
-import type { FSFile } from '~/types/filesystem/FSFile';
+import type { FSItem } from '~/types/filesystem/FSItem';
 
 // Busca recursiva do item pela name e type
 function findItemByName(item: FSItem, name: string): FSItem | undefined {
@@ -18,22 +17,24 @@ function findItemByName(item: FSItem, name: string): FSItem | undefined {
 // Flag para ignorar clique após drag
 let ignoreClick = false;
 
+const appConfig = useAppConfig();
 const repositoryStore = useRepositoryStore();
+const propertiesStore = usePropertiesStore();
 const repoStore = useRepoStore();
-const props = defineProps<{ item: FSDir }>();
+const props = defineProps<{ item: FSItem }>();
 const emit = defineEmits(['toggle-folder']);
 
 async function toggleFolder(item: FSItem) {
-  const properties = await repoStore.getProperties(item.path);
-  properties.collapsed = !item.collapsed;
-  await repoStore.setProperties(item.path, properties);
-  // Garante reatividade usando Vue.set se necessário
-  item.collapsed = !item.collapsed;
-  // Não emite para cima, pois o estado é local e recursivo
-  // Espera renderização e aplica sortable na pasta expandida correta
-  if (!item.collapsed && item.children) {
-    nextTick(() => setupSortable('tree'));
-  }
+  const properties = await propertiesStore.getProperties(item.path);
+  properties.collapsed = !properties.collapsed;
+  await propertiesStore.setProperties(item.path, properties);
+  // // Garante reatividade usando Vue.set se necessário
+  // item.collapsed = !item.collapsed;
+  // // Não emite para cima, pois o estado é local e recursivo
+  // // Espera renderização e aplica sortable na pasta expandida correta
+  // if (!item.collapsed && item.children) {
+  //   nextTick(() => setupSortable('tree'));
+  // }
 }
 
 function setupSortable(id: string) {
@@ -83,6 +84,13 @@ function applySortables() {
 
 onMounted(() => {
   applySortables();
+  // if (props.item.path == "/") {
+  //   props.item.children = props.item.children?.filter(child => {
+  //     if (child.type == "item") {
+        
+  //     }
+  //   });
+  // }
 });
 
 onUpdated(() => {
@@ -145,7 +153,7 @@ async function renameFolder(item: FSDir, input: HTMLInputElement) {
 
 <template>
   <ul class="list-unstyled gap-1 d-flex flex-column user-select-none m-0">
-    <template v-for="child in item.children" :key="child.id">
+    <template v-for="child in item.children" :key="child.path">
       <li
         class="tree-item rounded gap-1 d-flex flex-column"
         :data-path="child.path"
@@ -155,12 +163,13 @@ async function renameFolder(item: FSDir, input: HTMLInputElement) {
         >
           <i
             class="text-body-tertiary me-2 h-100 d-flex align-items-center"
+            style="width: 1.2em"
             :class="{
-              'opacity-0': !(child.children && child.children.length),
-              'bi-chevron-right': child.collapsed,
-              'bi-chevron-down': !child.collapsed
+              'opacity-0': !(child.type == 'item' && child.children && child.children.length),
+              'bi-chevron-right': child.type == 'item' && child.properties?.collapsed,
+              'bi-chevron-down': child.type == 'item' && !child.properties?.collapsed
             }"
-            @click="(child.children && child.children.length) && !ignoreClick ? toggleFolder(child) : null"
+            @click="(child.type == 'item' && child.children?.length) && !ignoreClick ? toggleFolder(child) : null"
           ></i>
           <div
             class="input-wrapper w-100 hstack"
@@ -170,8 +179,14 @@ async function renameFolder(item: FSDir, input: HTMLInputElement) {
             <i
               class="bi"
               :class="{
-                'bi-file-earmark-text': child.type == 'page',
-                'bi-database': child.type == 'database'
+                'bi-folder': child.type == 'item' && !child.isRepo && child.properties?.type == 'folder' && child.properties?.collapsed,
+                'bi-folder2-open': child.type == 'item' && !child.isRepo && child.properties?.type == 'folder' && !child.properties?.collapsed,
+                'bi-puzzle': child.name == appConfig.propertiesFileName,
+                'bi-gear': child.name == appConfig.settingsFileName,
+                'bi-archive': child.type == 'item' && child.isRepo,
+                'bi-git': child.name == '.git'
+                // 'bi-file-earmark-text': child.type == 'page',
+                // 'bi-database': child.type == 'database'
               }"
               style="font-size:1.2em"
             ></i>
@@ -183,7 +198,7 @@ async function renameFolder(item: FSDir, input: HTMLInputElement) {
             />
           </div>
         </div>
-        <ul v-if="!child.collapsed && child.children && child.children.length > 0" class="list-unstyled" style="margin-left: 24px;">
+        <ul v-if="child.type == 'item' && !child.properties?.collapsed && child.children && child.children.length > 0" class="list-unstyled" style="margin-left: 24px;">
           <FileTree :item="child" @toggle-folder="toggleFolder" />
         </ul>
       </li>

@@ -1,6 +1,9 @@
 <script setup lang="ts">
-import type { FSDir } from "~/types/filesystem/FSDir";
+import type { FSDir } from '~/types/filesystem/FSDir';
+import type { FSItem } from '~/types/filesystem/FSItem';
 
+const router = useRouter();
+const path = ref(decodeURIComponent(router.currentRoute.value.path));
 const repositoryStore = useRepositoryStore();
 const repoStore = useRepoStore();
 const breakpoint = useBreakpointStore();
@@ -9,69 +12,93 @@ const topBarHeight = ref(0);
 
 const filesystemStore = useFilesystemStore();
 
-const root = ref<FSDir>({
-  name: "root",
-  path: "/",
-  type: "dir"
-});
-watch(() => filesystemStore.filesystem, async (fs) => {
-  if (fs) {
-    const items = await filesystemStore.listFilesAndDirs("/", true);
-    root.value!.children = items;
-  } else {
-    root.value!.children = undefined;
+watch(() => router.currentRoute.value.path, async (newPath) => {
+  path.value = decodeURIComponent(newPath);
+  
+  let item = await filesystemStore.getItem(path.value);
+
+  if (!item?.isRepo) {
+    item = await filesystemStore.getItem("/");
+    item!.children = await filesystemStore.list("/", true);
+    filesystemStore.root = item;
+    return;
   }
+
+  item!.children = await filesystemStore.list(path.value, true);
+  console.log(item.isRepo)
+  filesystemStore.root = item;
 }, { immediate: true });
+// const groups = computed(() => {
+//   if (filesystemStore.root) {
+//     const dirs = filesystemStore.root.children?.filter((child): child is FSDir => child.type == "dir" && child.children!.length > 0);
+//     return dirs;
+//   } else {
+//     return undefined;
+//   }
+// });
+
+// watch(() => filesystemStore.root, async (root) => {
+//   const items = await filesystemStore.list("/", true);
+//   root!.dir.children = items;
+// }, { immediate: true });
 
 onMounted(async () => {
   new BootstrapMenu('[data-path]', {
     fetchElementData: async (el) => {
       const path = el.dataset.path;
+      const item = await filesystemStore.getItem(path!);
       const input = el.querySelector("input")!;
       const stat = await filesystemStore.filesystem.promises.stat(path!);
-      return { path, stat, input, text: el.textContent };
+      return { path, item, stat, input, text: el.textContent };
     },
     actionsGroups: [
+      ['createRepository', "createDocs"],
+      ['createFolder', "createFile", "createDatabase"],
       ['rename', 'delete']
     ],
     menuEvent: 'right-click',
     actions: {
-      createFolder: {
-        name: 'Criar pasta',
-        iconClass: 'folder',
-        // isShown: async (data) => data.stat?.isDirectory(),
-        isShown: () => false,
-        onClick: async (data) => await createFolder(data.path!)
-      },
       createRepository: {
         name: 'Criar repositório',
         iconClass: 'archive',
-        isShown: async (data) => data.stat?.isDirectory(),
-        onClick: async (data) => await repositoryStore.createRepository("Teste")
+        isShown: async (data) => path.value == "/",
+        onClick: async (data) => await repositoryStore.createRepository("Repo", data.path)
+      },
+      createDocs: {
+        name: 'Criar docs',
+        iconClass: 'book',
+        isShown: async (data) => path.value == "/",
+        onClick: async (data) => await repositoryStore.createDocs()
+      },
+      createFolder: {
+        name: 'Criar pasta',
+        iconClass: 'folder',
+        isShown: async (data) => path.value == "/" && data.item?.type == "item",
+        onClick: async (data) => await createFolder(data.path!)
       },
       createFile: {
         name: 'Criar página',
         iconClass: 'file-earmark-text',
-        isShown: async (data) => data.stat?.isDirectory(),
+        isShown: async (data) => data.item?.properties.id != "root" && data.stat?.isDirectory(),
         onClick: async (data) => await createFile(data.path!)
       },
       createDatabase: {
         name: 'Criar banco de dados',
         iconClass: 'database',
-        isShown: async (data) => data.stat?.isDirectory(),
+        isShown: async (data) => data.item?.properties.id != "root" && data.stat?.isDirectory(),
         isEnabled: () => false,
         onClick: () => {}
       },
       rename: {
         name: 'Renomear',
         iconClass: 'pencil',
-        isShown: async (data) => data.path !== '/',
+        isShown: async (data) => data.item?.properties.id != "root",
         onClick: async (data) => renameFocus(data.input)
       },
       delete: {
         name: 'Excluir',
         iconClass: 'trash',
-        isShown: async (data) => data.path !== '/',
+        isShown: async (data) => data.item?.properties.id != "root",
         onClick: async (data) => {
           if (data.path && !confirm(`Excluir "${data.path}"?`)) return;
           // await repoStore.removeRecursively(data.path);
@@ -107,8 +134,7 @@ async function createFile(path: string) {
 }
 
 async function createFolder(path: string) {
-  await repoStore.repo?.pfs.mkdir(`${path}/Nova pasta`);
-  await repositoryStore.loadRepositories();
+  await filesystemStore.createFolder(path, "Pasta");
 }
 
 </script>
@@ -121,18 +147,19 @@ async function createFolder(path: string) {
     :style="`top: ${breakpoint.isMdUp ? 0 : topBarHeight}px; bottom: ${breakpoint.isMdUp ? 0 : actionMenuHeight}px;`"
     tabindex="-1"
   >
-  <div class="offcanvas-header pb-0">
-    <select @change="navigateTo(($event.target as HTMLOptionElement).value)" class="form-select">
-      <option :value="root.path">{{root.name}}</option>
-      <hr />
-      <optgroup label="Repositórios:">
-        <option v-for="repo in repositoryStore.repositories" :value="repo.path">{{repo.name}}</option>
+  <div class="offcanvas-header">
+    <select :value="path" @change="navigateTo(($event.target as HTMLOptionElement).value)" class="form-select">
+      <option value="/">Raiz</option>
+      <optgroup v-for="group in filesystemStore.repos?.filter(repo => !repo.isRepo && repo.children?.length != 0)" :label="group.name">
+        <option v-for="repo in group.children" :value="repo.path">{{ repo.name }}</option>
       </optgroup>
+      <option v-for="repo in filesystemStore.repos?.filter(repo => repo.isRepo)" :value="repo.path">{{ repo.name }}</option>
     </select>
   </div>
-    <div data-path="/" class="offcanvas-body vstack gap-3">
-      <div v-if="root.children?.length" id="offcanvas-blocks" class="vstack gap-1">
-        <FileTree :item="root" />
+  <div data-path="/" class="offcanvas-body pt-0 vstack gap-3">
+      <!-- {{ filesystemStore.root }} -->
+      <div v-if="filesystemStore.root?.children?.length" id="offcanvas-blocks" class="vstack gap-1">
+        <FileTree :item="filesystemStore.root" />
       </div>
       <div v-else>
         <div class="text-center fs-5 text-body-tertiary">

@@ -2,9 +2,15 @@
 
 const loading = ref(true);
 const viewport = useViewportStore();
+const appConfig = useAppConfig();
 const repositoryStore = useRepositoryStore();
+const propertiesStore = usePropertiesStore();
+const settingsStore = useSettingsStore();
 
 onMounted(async () => {
+  const firstTime = !(await indexedDBExists(appConfig.fsName));
+  const filesystemStore = useFilesystemStore();
+
   viewport.updateWindowSize();
   window.addEventListener('resize', viewport.updateWindowSize);
 
@@ -12,10 +18,18 @@ onMounted(async () => {
   window.addEventListener('orientationchange', setAppHeight);
   setAppHeight();
 
-  // useRepositoryStore().loadRepositories();
-  useFilesystemStore();
-  await useSettingsStore().createSettings("/");
-  repositoryStore.repositories = await repositoryStore.listRepositories();
+  // FS population
+  if (firstTime) {
+    await propertiesStore.createProperties("/", propertiesStore.rootProperties);
+    await settingsStore.createSettings("/", settingsStore.rootSettings);
+    await repositoryStore.createDocs();
+  }
+
+  filesystemStore.repos = await filesystemStore.listRepos();
+  
+  // const root = await filesystemStore.getItem("/");
+  // root!.children = await filesystemStore.list("/", true);
+  // filesystemStore.root = root;
 
   await sleep(200);
   loading.value = false;
@@ -24,6 +38,16 @@ onMounted(async () => {
 function setAppHeight() {
   const height = window.innerHeight;
   document.documentElement.style.setProperty('--app-height', `${height}px`);
+}
+
+async function indexedDBExists(name: string): Promise<boolean> {
+  if (!('databases' in indexedDB)) {
+    console.warn('indexedDB.databases() não é suportado neste navegador');
+    return false;
+  }
+
+  const databases = await indexedDB.databases();
+  return databases.some(db => db.name === name);
 }
 
 </script>
