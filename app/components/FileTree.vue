@@ -162,7 +162,7 @@ async function renameFolder(item: FSDir, input: HTMLInputElement) {
           class="file hstack align-items-center rounded-2 py-1 px-2"
         >
           <i
-            class="text-body-tertiary me-2 h-100 d-flex align-items-center"
+            class="text-body-tertiary h-100 d-flex align-items-center"
             style="width: 1.2em"
             :class="{
               'opacity-0': !(child.type == 'item' && child.children && child.children.length),
@@ -176,13 +176,13 @@ async function renameFolder(item: FSDir, input: HTMLInputElement) {
             @click="navigateTo(child.path)"
             @dblclick="(e) => renameFocus((e.target as HTMLLIElement).querySelector('input') as HTMLInputElement)"
           >
-            <i
-              class="bi"
+            <i v-if="![appConfig.propertiesFileName, appConfig.settingsFileName].includes(child.name)"
+              class="ms-2 bi"
               :class="{
                 'bi-folder': child.type == 'item' && !child.isRepo && child.properties?.type == 'folder' && child.properties?.collapsed,
                 'bi-folder2-open': child.type == 'item' && !child.isRepo && child.properties?.type == 'folder' && !child.properties?.collapsed,
-                'bi-puzzle': child.name == appConfig.propertiesFileName,
-                'bi-gear': child.name == appConfig.settingsFileName,
+                // 'bi-puzzle': child.name == appConfig.propertiesFileName,
+                // 'bi-gear': child.name == appConfig.settingsFileName,
                 'bi-archive': child.type == 'item' && child.isRepo,
                 'bi-git': child.name == '.git'
                 // 'bi-file-earmark-text': child.type == 'page',

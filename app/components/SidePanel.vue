@@ -45,11 +45,10 @@ onMounted(async () => {
   new BootstrapMenu('[data-path]', {
     fetchElementData: async (el) => {
       const path = el.dataset.path;
-      const isOnRoot = path?.match(/\//g)?.length! <= 1;
       const item = await filesystemStore.getItem(path!);
       const input = el.querySelector("input")!;
       const stat = await filesystemStore.filesystem.promises.stat(path!);
-      return { path, isOnRoot, item, stat, input, text: el.textContent };
+      return { path, item, stat, input, text: el.textContent };
     },
     actionsGroups: [
       ['createRepository', "createDocs"],
@@ -73,7 +72,8 @@ onMounted(async () => {
       createFolder: {
         name: 'Criar pasta',
         iconClass: 'folder',
-        isShown: async (data) => path.value == "/" && data.stat?.type == "dir" && !data.item.isRepo && data.isOnRoot,
+        isShown: async (data) => path.value == "/" && data.stat?.type == "dir" && !data.item.isRepo,
+        isEnabled: async (data) => data.path == "/",
         onClick: async (data) => await createFolder(data.path!)
       },
       createFile: {
@@ -156,7 +156,7 @@ async function createFolder(path: string) {
       <option v-for="repo in filesystemStore.repos?.filter(repo => repo.isRepo)" :value="repo.path">{{ repo.name }}</option>
     </select>
   </div>
-  <div data-path="/" class="offcanvas-body pt-0 vstack gap-3">
+  <div data-path="/" class="offcanvas-body pt-0 vstack gap-3 user-select-none">
       <!-- {{ filesystemStore.root }} -->
       <div v-if="filesystemStore.root?.children?.length" id="offcanvas-blocks" class="vstack gap-1">
         <FileTree :item="filesystemStore.root" />
