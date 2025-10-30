@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import type { FSItem } from './types/filesystem/FSItem';
+
 
 const loading = ref(true);
 const viewport = useViewportStore();
@@ -6,6 +8,9 @@ const appConfig = useAppConfig();
 const repositoryStore = useRepositoryStore();
 const propertiesStore = usePropertiesStore();
 const settingsStore = useSettingsStore();
+const router = useRouter();
+
+const path = ref(decodeURIComponent(router.currentRoute.value.path));
 
 onMounted(async () => {
   const firstTime = !(await indexedDBExists(appConfig.fsName));
@@ -25,8 +30,45 @@ onMounted(async () => {
     await repositoryStore.createDocs();
   }
 
-  filesystemStore.repos = await filesystemStore.listRepos();
-  
+  filesystemStore.repositories = await filesystemStore.listRepos();
+
+  watch(() => router.currentRoute.value.path, async (newPath) => {
+    path.value = decodeURIComponent(newPath);
+
+    let match = false;
+    function check(item: FSItem) {
+      if (item.isRepo) {
+        if (path.value.startsWith(item.path)) {
+          filesystemStore.basePath = item.path;
+          filesystemStore.relativePath = path.value.replace(item.path, '');
+          match = true;
+        }
+      } else {
+        for (const child of item.children!) {
+          if (child.type == "item") check(child);
+        }
+      }
+    }
+    for(const repo of filesystemStore.repositories!) check(repo);
+    if (!match) {
+      filesystemStore.basePath = "";
+      filesystemStore.relativePath = path.value;
+    } 
+    // console.log(`filesystemStore.basePath: ${filesystemStore.basePath}; filesystemStore.relativePath: ${filesystemStore.relativePath};`);
+    
+    let item = await filesystemStore.getItem(filesystemStore.basePath! == "" ? "/" : filesystemStore.basePath!);
+
+    // if (!item?.isRepo) {
+    //   item = await filesystemStore.getItem("/");
+    //   item!.children = await filesystemStore.list("/", true);
+    //   filesystemStore.root = item;
+    //   return;
+    // }
+
+    item!.children = await filesystemStore.list(filesystemStore.basePath! == "" ? "/" : filesystemStore.basePath!, true);
+    filesystemStore.root = item;
+  }, { immediate: true });
+
   // const root = await filesystemStore.getItem("/");
   // root!.children = await filesystemStore.list("/", true);
   // filesystemStore.root = root;

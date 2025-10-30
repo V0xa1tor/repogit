@@ -14,7 +14,7 @@ export const usePropertiesStore = defineStore('properties', () => {
 
   async function createProperties(path: string, properties: properties) {
     const propertiesPath = `${path == "/" ? "" : path}/${appConfig.propertiesFileName}`;
-    await filesystemStore.filesystem.promises.writeFile(propertiesPath, JSON.stringify(properties), "utf8");
+    await filesystemStore.filesystem.promises.writeFile(propertiesPath, JSON.stringify(properties, null, '\t'), "utf8");
   }
 
   async function getProperties(path: string): Promise<properties> {
@@ -24,7 +24,7 @@ export const usePropertiesStore = defineStore('properties', () => {
 
   async function setProperties(path: string, properties: properties) {
     const propertiesPath = `${path == "/" ? "" : path}/${appConfig.propertiesFileName}`;
-    await filesystemStore.filesystem.promises.writeFile(propertiesPath, JSON.stringify(properties), "utf8");
+    await filesystemStore.filesystem.promises.writeFile(propertiesPath, JSON.stringify(properties, null, '\t'), "utf8");
     filesystemStore.updateRoot();
   }
 

@@ -15,7 +15,7 @@ export const useSettingsStore = defineStore('settings', () => {
   };
 
   async function createSettings(path: string, settings: settings) {
-    await filesystemStore.filesystem.promises.writeFile(`${path == "/" ? "" : path}/${appConfig.settingsFileName}`, JSON.stringify(settings), "utf8");
+    await filesystemStore.filesystem.promises.writeFile(`${path == "/" ? "" : path}/${appConfig.settingsFileName}`, JSON.stringify(settings, null, '\t'), "utf8");
   }
 
   return {

@@ -3,7 +3,6 @@ import type { FSDir } from '~/types/filesystem/FSDir';
 import type { FSItem } from '~/types/filesystem/FSItem';
 
 const router = useRouter();
-const path = ref(decodeURIComponent(router.currentRoute.value.path));
 const repositoryStore = useRepositoryStore();
 const repoStore = useRepoStore();
 const breakpoint = useBreakpointStore();
@@ -12,21 +11,6 @@ const topBarHeight = ref(0);
 
 const filesystemStore = useFilesystemStore();
 
-watch(() => router.currentRoute.value.path, async (newPath) => {
-  path.value = decodeURIComponent(newPath);
-  
-  let item = await filesystemStore.getItem(path.value);
-
-  if (!item?.isRepo) {
-    item = await filesystemStore.getItem("/");
-    item!.children = await filesystemStore.list("/", true);
-    filesystemStore.root = item;
-    return;
-  }
-
-  item!.children = await filesystemStore.list(path.value, true);
-  filesystemStore.root = item;
-}, { immediate: true });
 // const groups = computed(() => {
 //   if (filesystemStore.root) {
 //     const dirs = filesystemStore.root.children?.filter((child): child is FSDir => child.type == "dir" && child.children!.length > 0);
@@ -60,32 +44,32 @@ onMounted(async () => {
       createRepository: {
         name: 'Criar repositório',
         iconClass: 'archive',
-        isShown: async (data) => data.stat?.type == "dir" && path.value == "/" && !data.item.isRepo,
+        isShown: async (data) => data.stat?.type == "dir" && filesystemStore.basePath == "" && !data.item.isRepo,
         onClick: async (data) => await repositoryStore.createRepository("Repo", data.path)
       },
       createDocs: {
         name: 'Criar docs',
         iconClass: 'book',
-        isShown: async (data) => data.stat?.type == "dir" && path.value == "/" && !data.item.isRepo,
+        isShown: async (data) => data.stat?.type == "dir" && filesystemStore.basePath == "" && !data.item.isRepo,
         onClick: async (data) => await repositoryStore.createDocs()
       },
       createFolder: {
         name: 'Criar pasta',
         iconClass: 'folder',
-        isShown: async (data) => path.value == "/" && data.stat?.type == "dir" && !data.item.isRepo,
+        isShown: async (data) => filesystemStore.basePath == "" && data.stat?.type == "dir" && !data.item.isRepo,
         isEnabled: async (data) => data.path == "/",
         onClick: async (data) => await createFolder(data.path!)
       },
       createFile: {
         name: 'Criar página',
         iconClass: 'file-earmark-text',
-        isShown: async (data) => data.item?.properties.id != "root" && data.stat?.isDirectory() && path.value != "/",
+        isShown: async (data) => data.item?.properties.id != "root" && data.stat?.isDirectory() && filesystemStore.basePath != "",
         onClick: async (data) => await createFile(data.path!)
       },
       createDatabase: {
         name: 'Criar banco de dados',
         iconClass: 'database',
-        isShown: async (data) => data.item?.properties.id != "root" && data.stat?.isDirectory() && path.value != "/",
+        isShown: async (data) => data.item?.properties.id != "root" && data.stat?.isDirectory() && filesystemStore.basePath != "",
         isEnabled: () => false,
         onClick: () => {}
       },
@@ -148,12 +132,12 @@ async function createFolder(path: string) {
     tabindex="-1"
   >
   <div class="offcanvas-header">
-    <select :value="path" @change="navigateTo(($event.target as HTMLOptionElement).value)" class="form-select">
-      <option value="/">Raiz</option>
-      <optgroup v-for="group in filesystemStore.repos?.filter(repo => !repo.isRepo && repo.children?.length != 0)" :label="group.name">
+    <select :value="filesystemStore.basePath" @change="navigateTo(($event.target as HTMLOptionElement).value)" class="form-select">
+      <option value="">Raiz</option>
+      <optgroup v-for="group in filesystemStore.repositories?.filter(repo => !repo.isRepo && repo.children?.length != 0)" :label="group.name">
         <option v-for="repo in group.children" :value="repo.path">{{ repo.name }}</option>
       </optgroup>
-      <option v-for="repo in filesystemStore.repos?.filter(repo => repo.isRepo)" :value="repo.path">{{ repo.name }}</option>
+      <option v-for="repo in filesystemStore.repositories?.filter(repo => repo.isRepo)" :value="repo.path">{{ repo.name }}</option>
     </select>
   </div>
   <div data-path="/" class="offcanvas-body pt-0 vstack gap-3 user-select-none">

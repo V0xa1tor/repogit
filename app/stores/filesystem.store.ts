@@ -12,7 +12,9 @@ export const useFilesystemStore = defineStore("filesystem", () => {
   const propertiesStore = usePropertiesStore();
 
   const filesystem = new LightningFS(appConfig.fsName);
-  const repos = ref<FSItem[] | null>(null);
+  const repositories = ref<FSItem[] | null>(null);
+  const basePath = ref<string | null>(null);
+  const relativePath = ref<string | null>(null);
   const root = ref<FSItem | null>(null);
 
   /**
@@ -264,12 +266,14 @@ export const useFilesystemStore = defineStore("filesystem", () => {
     item!.children = await list(path, true);
     root.value = item;
 
-    repos.value = await listRepos("/");
+    repositories.value = await listRepos("/");
   }
 
   return {
     filesystem,
-    repos,
+    repositories,
+    basePath,
+    relativePath,
     root,
     exists,
     getItem,
